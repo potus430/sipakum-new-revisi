@@ -63,7 +63,7 @@
                                 {{ $item->metadata['pasal'] ?? '-' }}
                             </flux:table.cell>
 
-                            <flux:table.cell class="text-sm text-zinc-600 truncate max-w-[200px]"
+                            <flux:table.cell class="text-sm text-zinc-600 truncate max-w-50"
                                 title="{{ $item->metadata['isi_gugatan'] ?? '-' }}">
                                 {{ Str::limit($item->metadata['isi_gugatan'] ?? '-', 50) }}
                             </flux:table.cell>
