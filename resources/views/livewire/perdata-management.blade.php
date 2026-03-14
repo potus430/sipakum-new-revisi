@@ -13,34 +13,35 @@
     <flux:separator variant="subtle" />
 
     <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 mb-6 space-y-4 shadow-sm">
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-        
-        <div class="md:col-span-5">
-            <flux:input wire:model.live.debounce.300ms="search" label="Pencarian" placeholder="Cari nomor perkara atau nama pihak..." clearable />
-        </div>
-        
-        <div class="md:col-span-2">
-            <flux:select wire:model.live="filterJenis" label="Jenis Perkara">
-                <flux:select.option value="">Semua Jenis</flux:select.option>
-                <flux:select.option value="Gugatan">Gugatan</flux:select.option>
-                <flux:select.option value="Permohonan">Permohonan</flux:select.option>
-                <flux:select.option value="Gugatan Sederhana">Gugatan Sederhana</flux:select.option>
-            </flux:select>
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
 
-        <div class="md:col-span-2">
-            <flux:input wire:model.live="startDate" type="date" label="Dari" />
-        </div>
-        <div class="md:col-span-2">
-            <flux:input wire:model.live="endDate" type="date" label="Sampai" />
-        </div>
+            <div class="md:col-span-5">
+                <flux:input wire:model.live.debounce.300ms="search" label="Pencarian"
+                    placeholder="Cari nomor perkara atau nama pihak..." clearable />
+            </div>
 
-        <div class="md:col-span-1 flex gap-2">
-            <flux:button wire:click="exportExcel" icon="table-cells" variant="ghost" title="Excel" />
-            <flux:button wire:click="exportPDF" icon="document-text" variant="ghost" title="PDF" />
+            <div class="md:col-span-2">
+                <flux:select wire:model.live="filterJenis" label="Jenis Perkara">
+                    <flux:select.option value="">Semua Jenis</flux:select.option>
+                    <flux:select.option value="Gugatan">Gugatan</flux:select.option>
+                    <flux:select.option value="Permohonan">Permohonan</flux:select.option>
+                    <flux:select.option value="Gugatan Sederhana">Gugatan Sederhana</flux:select.option>
+                </flux:select>
+            </div>
+
+            <div class="md:col-span-2">
+                <flux:input wire:model.live="startDate" type="date" label="Dari" />
+            </div>
+            <div class="md:col-span-2">
+                <flux:input wire:model.live="endDate" type="date" label="Sampai" />
+            </div>
+
+            <div class="md:col-span-1 flex gap-2">
+                <flux:button wire:click="exportExcel" icon="table-cells" variant="ghost" title="Excel" />
+                <flux:button wire:click="exportPDF" icon="document-text" variant="ghost" title="PDF" />
+            </div>
         </div>
     </div>
-</div>
 
     <div
         class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-sm overflow-hidden">

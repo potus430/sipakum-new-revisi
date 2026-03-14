@@ -17,9 +17,18 @@ use App\Livewire\PengaduanManager;
 //     Route::view('dashboard', 'dashboard')->name('dashboard');
 // });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::get('/register', function () {
+    return view('pages::auth.register'); // Sesuaikan dengan lokasi view register Anda
+})->name('register');
+
+Route::middleware(['auth', 'verified','check.status'])->group(function () {
     Route::get('/', Dashboard::class)->name('dashboard');
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
+
+    Route::get('/user-management', \App\Livewire\UserManagement::class)
+        ->name('user.management')
+        ->middleware('can:is-superadmin'); // Pastikan memiliki gate/middleware ini
+
     // Route Modul Register Pidana
     Route::get('/pidana', PidanaManagement::class)->name('pidana.index');
     Route::get('/pidana/create', CreatePidana::class)->name('pidana.create');
@@ -36,7 +45,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/surat-kuasa', \App\Livewire\SuratKuasaManager::class)->name('surat-kuasa.index');
 
     // Rute Buku Register
-    Route::get('/register', \App\Livewire\RegisterIndex::class)->name('register.index');
+    //Route::get('/register', \App\Livewire\RegisterIndex::class)->name('register.index');
+    Route::get('/buku-register', \App\Livewire\RegisterIndex::class)->name('register.index');
 
     //Route Waarmerking
     Route::get('/waarmerking', WaarmerkingManager::class)->name('waarmerking.index');

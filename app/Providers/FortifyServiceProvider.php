@@ -4,15 +4,15 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Laravel\Fortify\Fortify;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -33,22 +33,33 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureViews();
         $this->configureRateLimiting();
 
-        //Logika Kustom Login SIPAKUM di sini
+        // Logika Kustom Login SIPAKUM di sini
         Fortify::authenticateUsing(function (Request $request) {
             $user = User::where('username', $request->username)->first();
 
+            // Debugging: Log jika user tidak ditemukan
+            if (! $user) {
+                \Log::info('Login Gagal: User tidak ditemukan untuk username: '.$request->username);
+
+                return null;
+            }
+
             if ($user && Hash::check($request->password, $user->password)) {
                 // Cek apakah akun sudah diaktifkan oleh Superadmin
-                if (!$user->is_active) {
+                if (! $user->is_active) {
                     throw ValidationException::withMessages([
                         'username' => 'Akun Anda belum diaktifkan oleh Superadmin.',
                     ]);
                 }
-                
+
                 return $user;
             }
 
-            return null;
+            // Debugging: Log jika password salah
+    \Log::info('Login Gagal: Password salah untuk username: ' . $request->username);
+    return null;
+
+            //return null;
         });
     }
 

@@ -19,6 +19,12 @@
                     wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
+
+                @if (auth()->user()->role === 'superadmin')
+            <flux:sidebar.item icon="users" :href="route('user.management')" :current="request()->routeIs('user.management')" wire:navigate>
+                {{ __('Manajemen User') }}
+            </flux:sidebar.item>
+        @endif
             </flux:sidebar.group>
 
 
@@ -106,6 +112,7 @@
                 </flux:menu.radio.group>
 
                 <flux:menu.separator />
+
 
                 <flux:menu.radio.group>
                     <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
