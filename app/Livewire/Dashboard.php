@@ -14,8 +14,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class Dashboard extends Component
 {
 
-public $startDate, $endDate;
-public function render()
+    public $startDate, $endDate;
+    public function render()
     {
         return view('dashboard', [
             // Statistik Perkara
@@ -36,14 +36,24 @@ public function render()
     }
 
     public function exportExcel()
-{
-    return Excel::download(new LaporanSIPAKUMExport($this->startDate, $this->endDate), 'laporan_sipakum.xlsx');
-}
+    {
+        return Excel::download(new LaporanSIPAKUMExport($this->startDate, $this->endDate), 'laporan_sipakum.xlsx');
+    }
 
-public function exportPDF()
-{
-    $data = [ /* query data yang sama dengan di atas */ ];
-    $pdf = Pdf::loadView('pdf.laporan', $data);
-    return response()->streamDownload(fn() => print($pdf->output()), 'laporan_sipakum.pdf');
-}
+    public function exportPDF()
+    {
+        $data = [
+            'startDate' => $this->startDate,
+            'endDate' => $this->endDate,
+            'data' => [
+                'pidana' => Berkas::where('modul', 'pidana')->whereBetween('created_at', [$this->startDate, $this->endDate])->count(),
+                'perdata' => Berkas::where('modul', 'perdata')->whereBetween('created_at', [$this->startDate, $this->endDate])->count(),
+                'pengaduan' => Pengaduan::whereBetween('created_at', [$this->startDate, $this->endDate])->count(),
+                'gratifikasi' => Gratifikasi::whereBetween('created_at', [$this->startDate, $this->endDate])->count(),
+            ]
+        ];
+
+        $pdf = Pdf::loadView('pdf.laporan', $data);
+        return response()->streamDownload(fn() => print($pdf->output()), 'laporan_sipakum.pdf');
+    }
 }

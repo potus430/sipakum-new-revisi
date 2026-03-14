@@ -54,6 +54,4 @@ class PerdataManagement extends Component
 
         return view('livewire.perdata-management', compact('perdata'));
     }
-
-
 }
