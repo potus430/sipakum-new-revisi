@@ -4,26 +4,46 @@ namespace App\Livewire;
 
 use App\Models\Berkas;
 use App\Models\BerkasFile;
+use App\Models\Pengaduan; // Pastikan model ini ada
+use App\Models\Gratifikasi; // Pastikan model ini ada
 use Livewire\Component;
+use App\Exports\LaporanSIPAKUMExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class Dashboard extends Component
 {
-    public function render()
+
+public $startDate, $endDate;
+public function render()
     {
-        // Menghitung statistik untuk dashboard
-        $totalPidana = Berkas::where('modul', 'pidana')->count();
-        $totalPerdata = Berkas::where('modul', 'perdata')->count();
-        $totalDokumen = BerkasFile::count();
-
-        // Mengambil 5 aktivitas perkara terakhir untuk ditampilkan di tabel
-        $recentBerkas = Berkas::latest()->take(5)->get();
-
-        // Mengembalikan view 'dashboard' (sesuaikan jika path view Anda berbeda)
         return view('dashboard', [
-            'totalPidana' => $totalPidana,
-            'totalPerdata' => $totalPerdata,
-            'totalDokumen' => $totalDokumen,
-            'recentBerkas' => $recentBerkas,
+            // Statistik Perkara
+            'totalPidana' => Berkas::where('modul', 'pidana')->count(),
+            'totalPerdata' => Berkas::where('modul', 'perdata')->count(),
+            'totalDokumen' => BerkasFile::count(),
+
+            // Statistik Modul Pengaduan & Gratifikasi (Informatif)
+            'stats' => [
+                'pengaduan_pending' => Pengaduan::where('status', 'Terima')->count(),
+                'pengaduan_proses' => Pengaduan::whereIn('status', ['Verifikasi', 'Investigasi'])->count(),
+                'gratifikasi_total' => Gratifikasi::count(),
+            ],
+
+            // Aktivitas Terbaru (Global)
+            'recentBerkas' => Berkas::latest()->take(5)->get(),
         ]);
     }
+
+    public function exportExcel()
+{
+    return Excel::download(new LaporanSIPAKUMExport($this->startDate, $this->endDate), 'laporan_sipakum.xlsx');
+}
+
+public function exportPDF()
+{
+    $data = [ /* query data yang sama dengan di atas */ ];
+    $pdf = Pdf::loadView('pdf.laporan', $data);
+    return response()->streamDownload(fn() => print($pdf->output()), 'laporan_sipakum.pdf');
+}
 }

@@ -42,4 +42,9 @@ class Berkas extends Model
     {
         return $this->hasMany(BerkasFile::class, 'berkas_id'); // Sesuaikan dengan nama model file Anda
     }
+
+    public function suratKuasa()
+{
+    return $this->hasMany(SuratKuasa::class, 'berkas_id');
+}
 }

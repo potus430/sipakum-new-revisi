@@ -33,6 +33,34 @@
                     {{ __('Perdata') }}
                 </flux:sidebar.item>
 
+                <flux:sidebar.item icon="book-open" :href="route('register.index')"
+                    :current="request()->routeIs('register.index')" wire:navigate>
+                    {{ __('Buku Register') }}
+                </flux:sidebar.item>
+
+                <flux:navlist.group heading="Dokumen Pendukung" class="mt-4">
+        {{-- Menu Baru: Surat Kuasa --}}
+        <flux:navlist.item href="{{ route('surat-kuasa.index') }}" icon="identification" wire:navigate>
+            Surat Kuasa
+        </flux:navlist.item>
+
+        {{-- Menu Baru: Waarmerking --}}
+    <flux:navlist.item href="{{ route('waarmerking.index') }}" icon="document-check" wire:navigate>
+        Waarmerking
+    </flux:navlist.item>
+    </flux:navlist.group>
+
+    <flux:navlist.group heading="Kepatuhan & Integrasi" class="mt-4">
+    <flux:navlist.item href="{{ route('gratifikasi.index') }}" icon="shield-check" wire:navigate>
+        Gratifikasi
+    </flux:navlist.item>
+
+    <flux:navlist.item href="{{ route('pengaduan.index') }}" icon="megaphone" wire:navigate>
+        Pengaduan
+    </flux:navlist.item>
+</flux:navlist.group>
+                
+
                 {{-- Menu Perdata dan modul lain bisa ditambahkan di sini nanti --}}
             </flux:sidebar.group>
         </flux:sidebar.nav>

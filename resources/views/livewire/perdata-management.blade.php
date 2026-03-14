@@ -23,6 +23,7 @@
                 <flux:select.option value="">Semua Jenis</flux:select.option>
                 <flux:select.option value="Gugatan">Gugatan</flux:select.option>
                 <flux:select.option value="Permohonan">Permohonan</flux:select.option>
+                <flux:select.option value="Gugatan Sederhana">Gugatan Sederhana</flux:select.option>
             </flux:select>
         </div>
     </div>

@@ -63,4 +63,12 @@ class User extends Authenticatable
             ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
+
+    public function waarmerking() {
+    return $this->hasMany(Waarmerking::class);
+}
+
+ public function gratifikasi() {
+    return $this->hasMany(Gratifikasi::class);
+}
 }

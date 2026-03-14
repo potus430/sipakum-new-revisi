@@ -12,6 +12,7 @@
             <flux:select wire:model="jenis_perkara" label="Jenis Perkara" placeholder="Pilih Jenis...">
                 <flux:select.option value="Gugatan">Gugatan</flux:select.option>
                 <flux:select.option value="Permohonan">Permohonan</flux:select.option>
+                <flux:select.option value="Gugatan Sederhana">Gugatan Sederhana</flux:select.option>
             </flux:select>
             <flux:input wire:model="pasal" label="Pasal / Dasar Hukum" />
         </div>

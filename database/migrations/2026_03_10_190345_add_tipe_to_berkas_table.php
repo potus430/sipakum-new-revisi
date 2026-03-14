@@ -17,7 +17,7 @@ return new class extends Migration {
 
             // Opsional: Jika Anda ingin menambahkan metadata khusus perdata
             // agar bisa disimpan dalam format JSON di database
-            $table->json('metadata')->nullable()->after('tipe');
+            //$table->json('metadata')->nullable()->after('tipe');
         });
     }
 
@@ -27,7 +27,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('berkas', function (Blueprint $table) {
-            $table->dropColumn(['tipe', 'metadata']);
+            $table->dropColumn(['tipe']);
         });
     }
 };
