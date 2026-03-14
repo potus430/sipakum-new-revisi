@@ -36,7 +36,7 @@
                     <flux:table.column class="w-1/6">Nomor Perkara</flux:table.column>
                     <flux:table.column class="w-1/6">Pihak</flux:table.column>
                     <flux:table.column class="w-1/4">Pasal / Dasar Hukum</flux:table.column>
-                    <flux:table.column class="w-1/4">Isi Gugatan / Permohonan</flux:table.column>
+                    <flux:table.column class="w-1/4">Isi Putusan</flux:table.column>
                     <flux:table.column>Dokumen</flux:table.column>
                     <flux:table.column align="end">Aksi</flux:table.column>
                 </flux:table.columns>
