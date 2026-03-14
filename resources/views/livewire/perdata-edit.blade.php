@@ -15,7 +15,7 @@
             </flux:select>
             <flux:input wire:model="pasal" label="Pasal / Dasar Hukum" />
         </div>
-        <flux:textarea wire:model="isi_gugatan" label="Isi Putusan" /> 
+        <flux:textarea wire:model="isi_gugatan" label="Isi Putusan" />
 
         <div class="space-y-4 border-t pt-6">
             <div>
@@ -35,6 +35,36 @@
             <div>
                 <flux:label>Tambah Dokumen Baru</flux:label>
                 @foreach ($fileInputs as $index => $val)
+                    <div class="flex flex-col gap-2 mt-3 p-3 border rounded-lg">
+                        <div class="flex gap-2">
+                            <input type="file" wire:model="files.{{ $index }}"
+                                class="block w-full text-sm border p-2 rounded" />
+                            @if (count($fileInputs) > 1)
+                                <flux:button type="button" wire:click="removeFileInput({{ $index }})"
+                                    variant="danger" icon="trash" />
+                            @endif
+                        </div>
+
+                        @if (isset($files[$index]))
+                            <div class="mt-1 text-xs text-zinc-500">
+                                @if (in_array($files[$index]->getClientOriginalExtension(), ['jpg', 'jpeg', 'png', 'webp']))
+                                    <img src="{{ $files[$index]->temporaryUrl() }}"
+                                        class="h-16 w-16 object-cover rounded border">
+                                @else
+                                    <span>📄 {{ $files[$index]->getClientOriginalName() }}</span>
+                                @endif
+                            </div>
+                        @endif
+
+                        @error("files.$index")
+                            <span class="text-red-500 text-xs">{{ $message }}</span>
+                        @enderror
+                    </div>
+                @endforeach
+                <flux:button type="button" wire:click="addFileInput" variant="subtle" class="mt-2" icon="plus">
+                    Tambah Input File</flux:button>
+                {{-- <flux:label>Tambah Dokumen Baru</flux:label>
+                @foreach ($fileInputs as $index => $val)
                     <div class="flex flex-col gap-1 mt-2">
                         <div class="flex gap-2">
                             <input type="file" wire:model="files.{{ $index }}"
@@ -50,7 +80,7 @@
                     </div>
                 @endforeach
                 <flux:button type="button" wire:click="addFileInput" variant="subtle" class="mt-2" icon="plus">
-                    Tambah Input File</flux:button>
+                    Tambah Input File</flux:button> --}}
             </div>
         </div>
 
