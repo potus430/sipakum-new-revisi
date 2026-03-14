@@ -15,7 +15,7 @@
             </flux:select>
             <flux:input wire:model="pasal" label="Pasal / Dasar Hukum" />
         </div>
-        <flux:textarea wire:model="isi_gugatan" label="Isi Gugatan / Permohonan" />
+        <flux:textarea wire:model="isi_gugatan" label="Isi Putusan" /> 
 
         <div class="space-y-4 border-t pt-6">
             <div>
