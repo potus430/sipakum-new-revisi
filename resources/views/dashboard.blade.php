@@ -8,9 +8,6 @@
 
         
     </div>
-
-    
-
     <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
         <flux:card class="border-l-4 border-l-red-500">
             <flux:subheading>Total Perkara Pidana</flux:subheading>
