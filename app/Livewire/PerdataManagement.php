@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Exports\LaporanSIPAKUMExport;
+use App\Exports\Modules\PerdataExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Berkas;
@@ -48,7 +48,10 @@ class PerdataManagement extends Component
     // Method Ekspor
     public function exportExcel()
     {
-        return Excel::download(new LaporanSIPAKUMExport($this->startDate, $this->endDate), 'perdata_report.xlsx');
+        return Excel::download(
+            new PerdataExport($this->startDate, $this->endDate),
+            'laporan_perdata_' . date('Y-m-d') . '.xlsx'
+        );
     }
 
     public function exportPDF()
