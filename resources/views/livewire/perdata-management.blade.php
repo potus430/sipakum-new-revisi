@@ -1,4 +1,4 @@
-<div class="p-6">
+<div class="p-6 x-data @notify.window="flux.toast.success($event.detail.message)"">
     <div class="flex items-center justify-between mb-6">
         <div>
             <flux:heading size="xl" level="1">Register Perdata</flux:heading>
@@ -49,8 +49,10 @@
             <flux:table>
                 <flux:table.columns>
                     <flux:table.column class="w-1/6">Nomor Perkara</flux:table.column>
-                    <flux:table.column class="w-1/6">Pihak</flux:table.column>
-                    <flux:table.column class="w-1/4">Pasal / Dasar Hukum</flux:table.column>
+                    <flux:table.column class="w-1/6">Tanggal Register</flux:table.column>
+                    <flux:table.column class="w-1/6">Penggugat / Pemohon</flux:table.column>
+                    <flux:table.column class="w-1/6">Tergugat</flux:table.column>
+                    <flux:table.column class="w-1/4">Jenis</flux:table.column>
                     <flux:table.column class="w-1/4">Isi Putusan</flux:table.column>
                     <flux:table.column>Dokumen</flux:table.column>
                     <flux:table.column align="end">Aksi</flux:table.column>
@@ -70,12 +72,21 @@
                             </flux:table.cell>
 
                             <flux:table.cell class="font-medium text-zinc-700 dark:text-zinc-300">
-                                {{ $item->metadata['penggugat'] ?? '-' }} <span class="text-zinc-400">vs</span>
+                                {{ $item->tanggal_kejadian->format('d/m/Y') }}
+                            </flux:table.cell>
+
+                            <flux:table.cell class="font-medium text-zinc-700 dark:text-zinc-300">
+                                {{ $item->metadata['penggugat_pemohon'] ?? '-' }}
+                            </flux:table.cell>
+
+                            <flux:table.cell class="text-sm text-zinc-600">
                                 {{ $item->metadata['tergugat'] ?? '-' }}
                             </flux:table.cell>
 
                             <flux:table.cell class="text-sm text-zinc-600">
-                                {{ $item->metadata['pasal'] ?? '-' }}
+                                <flux:badge size="sm" color="sky" inset="top bottom">
+                                    {{ $item->metadata['jenis_perkara'] ?? '-' }}
+                                </flux:badge>
                             </flux:table.cell>
 
                             <flux:table.cell class="text-sm text-zinc-600 truncate max-w-50"

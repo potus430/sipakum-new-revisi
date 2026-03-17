@@ -14,19 +14,44 @@
 
     <flux:separator variant="subtle" />
 
-    <div class="flex flex-col md:flex-row gap-4 my-6">
-        <div class="flex-1">
-            <flux:input wire:model.live.debounce.300ms="search" view="search"
-                placeholder="Cari nomor perkara atau nama terdakwa..." clearable />
-        </div>
-        <div class="flex gap-2">
-            <flux:select wire:model.live="filterJenis" placeholder="Semua Jenis">
-                <option value="">Semua Jenis</option>
-                <option value="PID.B">PID.BIASA</option>
-                <option value="PID.SUS">PID.KHUSUS</option>
-                <option value="ANAK">ANAK</option>
-                <option value="PRAPERADILAN">PRAPERADILAN</option>
-            </flux:select>
+    {{-- Filter & Export Section (Sejajar dalam satu baris di Desktop) --}}
+    {{-- Filter & Export Section --}}
+    <div class="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 mb-6 shadow-sm">
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-end">
+
+            {{-- Search --}}
+            <div class="xl:col-span-4">
+                <flux:input wire:model.live.debounce.300ms="search" label="Pencarian" placeholder="Nomor/Terdakwa..."
+                    icon="magnifying-glass" clearable />
+            </div>
+
+            {{-- Filter Jenis --}}
+            <div class="xl:col-span-2">
+                <flux:select wire:model.live="filterJenis" label="Jenis Perkara">
+                    <flux:select.option value="">Semua Jenis</flux:select.option>
+                    <flux:select.option value="PID.B">PID.B</flux:select.option>
+                    <flux:select.option value="PID.SUS">PID.SUS</flux:select.option>
+                    <flux:select.option value="ANAK">ANAK</flux:select.option>
+                    <flux:select.option value="PRAPERADILAN">PRAPERADILAN</flux:select.option>
+                </flux:select>
+            </div>
+
+            {{-- Rentang Tanggal --}}
+            <div class="xl:col-span-2">
+                <flux:input type="date" wire:model.live="tglMulai" label="Dari" />
+            </div>
+
+            <div class="xl:col-span-2">
+                <flux:input type="date" wire:model.live="tglSelesai" label="Sampai" />
+            </div>
+
+            {{-- Tombol Ekspor (Hanya Icon) --}}
+            <div class="xl:col-span-2 flex gap-2 justify-end">
+                <flux:button wire:click="exportExcel" variant="subtle" icon="table-cells"
+                    class="text-green-600 border-green-100 hover:bg-green-50" title="Ekspor Excel" />
+                <flux:button wire:click="exportPdf" variant="subtle" icon="document-text"
+                    class="text-red-600 border-red-100 hover:bg-red-50" title="Ekspor PDF" />
+            </div>
         </div>
     </div>
 

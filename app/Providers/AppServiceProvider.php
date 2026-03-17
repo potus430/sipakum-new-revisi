@@ -29,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('is-superadmin', function (User $user) {
             return $user->role === 'superadmin';
         });
+
+        view()->share('appName', \App\Models\Setting::get('app_name', config('app.name')));
     }
 
     /**
@@ -42,7 +44,8 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
+        Password::defaults(
+            fn(): ?Password => app()->isProduction()
             ? Password::min(12)
                 ->mixedCase()
                 ->letters()

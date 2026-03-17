@@ -17,20 +17,38 @@ class Dashboard extends Component
     public $startDate, $endDate;
     public function render()
     {
+        // Statistik Pengaduan untuk Dashboard Ringkasan
+        $totalPengaduan = Pengaduan::count();
+        $pengaduanSelesai = Pengaduan::where('status', 'Selesai')->count();
+        $pengaduanProses = Pengaduan::whereIn('status', ['Terima', 'Verifikasi', 'Investigasi'])->count();
+
+        // Hitung Persentase Penyelesaian
+        $persentaseSelesai = $totalPengaduan > 0
+            ? round(($pengaduanSelesai / $totalPengaduan) * 100)
+            : 0;
+
         return view('dashboard', [
-            // Statistik Perkara
+            // Statistik Perkara Utama
             'totalPidana' => Berkas::where('modul', 'pidana')->count(),
             'totalPerdata' => Berkas::where('modul', 'perdata')->count(),
             'totalDokumen' => BerkasFile::count(),
 
-            // Statistik Modul Pengaduan & Gratifikasi (Informatif)
+            // Statistik Modul Pengaduan (Detail untuk Ringkasan)
+            'pengaduanStats' => [
+                'total' => $totalPengaduan,
+                'selesai' => $pengaduanSelesai,
+                'proses' => $pengaduanProses,
+                'persen_selesai' => $persentaseSelesai,
+            ],
+
+            // Statistik Ringkas (Tetap dipertahankan untuk kompatibilitas view lama jika ada)
             'stats' => [
                 'pengaduan_pending' => Pengaduan::where('status', 'Terima')->count(),
-                'pengaduan_proses' => Pengaduan::whereIn('status', ['Verifikasi', 'Investigasi'])->count(),
+                'pengaduan_proses' => $pengaduanProses,
                 'gratifikasi_total' => Gratifikasi::count(),
             ],
 
-            // Aktivitas Terbaru (Global)
+            // Aktivitas Terbaru
             'recentBerkas' => Berkas::latest()->take(5)->get(),
         ]);
     }
@@ -54,6 +72,6 @@ class Dashboard extends Component
         ];
 
         $pdf = Pdf::loadView('pdf.laporan', $data);
-        return response()->streamDownload(fn() => print($pdf->output()), 'laporan_sipakum.pdf');
+        return response()->streamDownload(fn() => print ($pdf->output()), 'laporan_sipakum.pdf');
     }
 }

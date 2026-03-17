@@ -12,29 +12,35 @@ class EditPerdata extends Component
 {
     use WithFileUploads;
 
-    public $berkas, $no_perkara, $tgl_register, $penggugat, $tergugat, $jenis_perkara, $pasal, $isi_gugatan;
-    public $oldFiles = []; // Menyimpan file yang sudah ada
-    public $files = [];    // Menyimpan file baru
+    public $berkas;
+    public $no_perkara, $tgl_register, $penggugat_pemohon, $tergugat, $jenis_perkara, $isi_gugatan;
+    public $tgl_putusan, $tgl_penyerahan_berkas; // Properti baru sesuai revisi
+
+    public $existingFiles = []; // Diseragamkan dengan view
+    public $files = [];
     public $fileInputs = [0];
 
-    // Tambahkan protected messages untuk pesan error
     protected $messages = [
         'files.*.mimes' => 'Format file harus berupa PDF, JPG, atau PNG.',
         'files.*.max' => 'Ukuran file tidak boleh lebih dari 10 MB.',
     ];
+
     public function mount($id)
     {
         $this->berkas = Berkas::with('files')->findOrFail($id);
+
         $this->no_perkara = $this->berkas->nomor_registrasi;
         $this->tgl_register = $this->berkas->tanggal_kejadian->format('Y-m-d');
 
-        $this->penggugat = $this->berkas->metadata['penggugat'] ?? '';
+        // Ambil data dari metadata JSON
+        $this->penggugat_pemohon = $this->berkas->metadata['penggugat_pemohon'] ?? ($this->berkas->metadata['penggugat'] ?? '');
         $this->tergugat = $this->berkas->metadata['tergugat'] ?? '';
         $this->jenis_perkara = $this->berkas->metadata['jenis_perkara'] ?? '';
-        $this->pasal = $this->berkas->metadata['pasal'] ?? '';
         $this->isi_gugatan = $this->berkas->metadata['isi_gugatan'] ?? '';
+        $this->tgl_putusan = $this->berkas->metadata['tgl_putusan'] ?? '';
+        $this->tgl_penyerahan_berkas = $this->berkas->metadata['tgl_penyerahan_berkas'] ?? '';
 
-        $this->oldFiles = $this->berkas->files; // Ambil file relasi
+        $this->existingFiles = $this->berkas->files;
     }
 
     public function addFileInput()
@@ -45,48 +51,47 @@ class EditPerdata extends Component
     public function removeFileInput($index)
     {
         unset($this->fileInputs[$index]);
-        $this->fileInputs = array_values($this->fileInputs);
         unset($this->files[$index]);
-        $this->files = array_values($this->files);
     }
 
-    public function deleteOldFile($fileId)
+    public function deleteFile($fileId)
     {
         $file = BerkasFile::findOrFail($fileId);
         Storage::disk('public')->delete($file->file_path);
         $file->delete();
-        $this->oldFiles = $this->berkas->fresh()->files; // Refresh daftar
+
+        $this->existingFiles = $this->berkas->fresh()->files;
+        $this->dispatch('notify', message: 'File berhasil dihapus.');
     }
 
     public function update()
     {
-        // 1. Validasi input dasar dan file baru
         $this->validate([
             'no_perkara' => 'required',
-            'penggugat' => 'required',
+            'penggugat_pemohon' => 'required',
             'tergugat' => 'required',
-            // Validasi tipe file untuk setiap file baru yang diunggah
             'files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
-        // 2. Update data metadata
         $this->berkas->update([
             'nomor_registrasi' => $this->no_perkara,
             'tanggal_kejadian' => $this->tgl_register,
+            'subjek' => "{$this->penggugat_pemohon} vs {$this->tergugat}",
             'metadata' => [
-                'penggugat' => $this->penggugat,
+                'penggugat_pemohon' => $this->penggugat_pemohon,
                 'tergugat' => $this->tergugat,
                 'jenis_perkara' => $this->jenis_perkara,
-                'pasal' => $this->pasal,
+                'tgl_putusan' => $this->tgl_putusan,
+                'tgl_penyerahan_berkas' => $this->tgl_penyerahan_berkas,
                 'isi_gugatan' => $this->isi_gugatan,
+                // 'pasal' dihapus
             ],
         ]);
 
-        // 3. Simpan file baru dengan validasi
         if (!empty($this->files)) {
             foreach ($this->files as $file) {
                 if ($file) {
-                    $path = $file->store('dokumen/perdata', 'public');
+                    $path = $file->store('berkas/perdata', 'public');
                     $this->berkas->files()->create([
                         'file_name' => $file->getClientOriginalName(),
                         'file_path' => $path
@@ -95,7 +100,13 @@ class EditPerdata extends Component
             }
         }
 
-        session()->flash('success', 'Data berhasil diperbarui.');
+        $this->dispatch(
+            'notify',
+            variant: 'success',
+            heading: 'Berhasil',
+            message: 'Data perdata telah diperbarui di sistem.'
+        );
+        //$this->dispatch('notify', message: 'Data Perdata berhasil diperbarui!');
         return redirect()->route('perdata.index');
     }
 

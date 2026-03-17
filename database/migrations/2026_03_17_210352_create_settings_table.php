@@ -10,11 +10,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('berkas_files', function (Blueprint $table) {
+        Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('berkas_id')->constrained('berkas')->onDelete('cascade');
-            $table->string('file_name');
-            $table->string('file_path');
+            $table->string('key')->unique(); // Contoh: 'app_name', 'app_logo', 'alamat_kantor'
+            $table->text('value')->nullable();
             $table->timestamps();
         });
     }
@@ -24,6 +23,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('berkas_files');
+        Schema::dropIfExists('settings');
     }
 };

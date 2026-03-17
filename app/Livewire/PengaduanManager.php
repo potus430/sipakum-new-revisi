@@ -3,108 +3,206 @@
 namespace App\Livewire;
 
 use App\Models\Pengaduan;
+use App\Models\PengaduanLog;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Exports\Modules\PengaduanExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PengaduanManager extends Component
 {
     use WithFileUploads, WithPagination;
 
-    public $judul, $isi_pengaduan, $is_anonim = false, $status = 'Terima';
-    public $file_pendukung, $selectedId, $search = '';
+    // Properti sesuai revisi
+    public $judul, $pelapor, $terlapor, $jenis_pengaduan, $sarana_pengaduan;
+    public $isi_pengaduan, $tindak_lanjut, $keterangan, $status = 'Terima';
+    public $is_anonim = false;
+    public $file_pendukung, $selectedId;
 
 
+    // Properti Filter
+    public $search = '';
+    public $startDate, $endDate;
 
     public $selectedPengaduan;
 
+    // Reset halaman saat filter berubah
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+    public function updatingStartDate()
+    {
+        $this->resetPage();
+    }
+    public function updatingEndDate()
+    {
+        $this->resetPage();
+    }
 
     public function save()
     {
-        $pengaduan = Pengaduan::find($this->selectedId);
-
-
         $this->validate([
             'judul' => 'required|min:5',
+            'pelapor' => 'required',
+            'terlapor' => 'required',
+            'jenis_pengaduan' => 'required',
+            'sarana_pengaduan' => 'required',
             'isi_pengaduan' => 'required',
         ]);
 
-        // 1. Ambil data lama untuk pengecekan status
         $pengaduanLama = Pengaduan::find($this->selectedId);
-        $statusLama = $pengaduanLama ? $pengaduanLama->status : 'Terima';
 
-        // 2. Lakukan penyimpanan data (Update atau Create)
-        $path = $this->file_pendukung ? $this->file_pendukung->store('pengaduan', 'public') : ($pengaduanLama?->file_pendukung);
+        // Handle File Upload
+        $path = $this->file_pendukung
+            ? $this->file_pendukung->store('pengaduan', 'public')
+            : ($pengaduanLama?->file_pendukung);
 
         $pengaduan = Pengaduan::updateOrCreate(['id' => $this->selectedId], [
-        'judul' => $this->judul,
-        'isi_pengaduan' => $this->isi_pengaduan,
-        'anonim' => $this->is_anonim ? 'Ya' : 'Tidak',
-        'status' => $this->status,
-        'file_pendukung' => $path,
-        'user_id' => $this->is_anonim ? null : Auth::id(),
-    ]);
-
-    // 3. Simpan log hanya jika ada perubahan status pada data yang sudah ada
-    if ($pengaduanLama && $statusLama !== $this->status) {
-        \App\Models\PengaduanLog::create([
-            'pengaduan_id' => $pengaduan->id, // Menggunakan variabel $pengaduan yang sudah valid
+            'judul' => $this->judul,
+            'pelapor' => $this->pelapor,
+            'terlapor' => $this->terlapor,
+            'jenis_pengaduan' => $this->jenis_pengaduan,
+            'sarana_pengaduan' => $this->sarana_pengaduan,
+            'isi_pengaduan' => $this->isi_pengaduan,
+            'tindak_lanjut' => $this->tindak_lanjut,
+            'keterangan' => $this->keterangan,
+            'anonim' => $this->is_anonim ? 'Ya' : 'Tidak',
+            'status' => $this->status,
+            'file_pendukung' => $path,
             'user_id' => Auth::id(),
-            'status_lama' => $statusLama,
-            'status_baru' => $this->status,
-            'created_at' => now(),
         ]);
-    }
 
+        // Catat Log jika status berubah
+        if ($pengaduanLama && $pengaduanLama->status !== $this->status) {
+            PengaduanLog::create([
+                'pengaduan_id' => $pengaduan->id,
+                'user_id' => Auth::id(),
+                'status_lama' => $pengaduanLama->status,
+                'status_baru' => $this->status,
+            ]);
+        }
 
-        session()->flash('success', 'Pengaduan berhasil diproses.');
-       $this->reset(['judul', 'isi_pengaduan', 'status', 'selectedId', 'is_anonim', 'file_pendukung']);
-    }
-
-    public function delete($id)
-    {
-        $item = Pengaduan::findOrFail($id);
-        if ($item->file_pendukung) Storage::disk('public')->delete($item->file_pendukung);
-        $item->delete();
+        session()->flash('success', 'Data Pengaduan berhasil diproses.');
+        $this->resetForm();
     }
 
     public function edit($id)
-{
-    $pengaduan = Pengaduan::findOrFail($id);
-    $this->selectedId = $pengaduan->id;
-    $this->judul = $pengaduan->judul;
-    $this->isi_pengaduan = $pengaduan->isi_pengaduan;
-    $this->status = $pengaduan->status; // Memuat status saat ini
-    $this->js('$flux.modal("modal-update-status").show()');
-}
+    {
+        $pengaduan = Pengaduan::findOrFail($id);
+        $this->selectedId = $pengaduan->id;
+        $this->judul = $pengaduan->judul;
+        $this->pelapor = $pengaduan->pelapor;
+        $this->terlapor = $pengaduan->terlapor;
+        $this->jenis_pengaduan = $pengaduan->jenis_pengaduan;
+        $this->sarana_pengaduan = $pengaduan->sarana_pengaduan;
+        $this->isi_pengaduan = $pengaduan->isi_pengaduan;
+        $this->tindak_lanjut = $pengaduan->tindak_lanjut;
+        $this->keterangan = $pengaduan->keterangan;
+        $this->status = $pengaduan->status;
+        $this->is_anonim = $pengaduan->anonim === 'Ya';
 
-    public function viewDetail($id)
-{
-    $this->selectedPengaduan = Pengaduan::find($id);
-    $this->js('$flux.modal("modal-detail-pengaduan").show()');
-}
-
-public function downloadFile($id)
-{
-    $item = Pengaduan::findOrFail($id);
-
-    if ($item->file_pendukung && Storage::disk('public')->exists($item->file_pendukung)) {
-        return Storage::disk('public')->download($item->file_pendukung);
+        $this->js('$flux.modal("modal-update-status").show()');
     }
 
-    session()->flash('error', 'File tidak ditemukan.');
-}
+    public function resetForm()
+    {
+        $this->reset([
+            'judul',
+            'pelapor',
+            'terlapor',
+            'jenis_pengaduan',
+            'sarana_pengaduan',
+            'isi_pengaduan',
+            'tindak_lanjut',
+            'keterangan',
+            'status',
+            'selectedId',
+            'is_anonim',
+            'file_pendukung'
+        ]);
+    }
+
     public function render()
     {
-       $pengaduans = Pengaduan::where('judul', 'like', "%{$this->search}%")
-        ->orWhere('isi_pengaduan', 'like', "%{$this->search}%") // Opsional: mencari juga di isi
-        ->latest()
-        ->paginate(10);
+        $pengaduans = Pengaduan::with('user')
+            ->when($this->search, function ($q) {
+                $q->where('judul', 'like', '%' . $this->search . '%')
+                    ->orWhere('pelapor', 'like', '%' . $this->search . '%')
+                    ->orWhere('terlapor', 'like', '%' . $this->search . '%');
+            })
+            ->when($this->startDate, function ($q) {
+                $q->whereDate('created_at', '>=', $this->startDate);
+            })
+            ->when($this->endDate, function ($q) {
+                $q->whereDate('created_at', '<=', $this->endDate);
+            })
+            ->latest()
+            ->paginate(10);
 
-    return view('livewire.pengaduan-manager', [
-        'pengaduans' => $pengaduans
-    ]);
+        return view('livewire.pengaduan-manager', [
+            'pengaduans' => $pengaduans
+        ]);
+    }
+
+    // Fungsi tambahan untuk download file
+    public function downloadFile($id)
+    {
+        $item = Pengaduan::findOrFail($id);
+        if ($item->file_pendukung && Storage::disk('public')->exists($item->file_pendukung)) {
+            return Storage::disk('public')->download($item->file_pendukung);
+        }
+        session()->flash('error', 'File tidak ditemukan.');
+    }
+
+    public function viewDetail($id)
+    {
+        // Mengambil data detail pengaduan berdasarkan ID
+        $this->selectedPengaduan = Pengaduan::with('user')->find($id);
+
+        // Memicu modal detail untuk muncul di browser
+        if ($this->selectedPengaduan) {
+            $this->js('$flux.modal("modal-detail-pengaduan").show()');
+        }
+    }
+
+    public function exportExcel()
+    {
+        return Excel::download(
+            new PengaduanExport($this->startDate, $this->endDate, $this->search),
+            'register_pengaduan_' . now()->format('Ymd') . '.xlsx'
+        );
+    }
+
+    public function exportPdf()
+    {
+        // Menggunakan query yang sama dengan tabel
+        $data = Pengaduan::query()
+            ->when($this->search, function ($q) {
+                $q->where('judul', 'like', '%' . $this->search . '%')
+                    ->orWhere('pelapor', 'like', '%' . $this->search . '%');
+            })
+            ->when($this->startDate, function ($q) {
+                $q->whereDate('created_at', '>=', $this->startDate);
+            })
+            ->when($this->endDate, function ($q) {
+                $q->whereDate('created_at', '<=', $this->endDate);
+            })
+            ->get();
+
+        $pdf = Pdf::loadView('pdf.pengaduan', [
+            'data' => $data,
+            'start' => $this->startDate,
+            'end' => $this->endDate
+        ])->setPaper('a4', 'landscape'); // Landscape karena kolomnya banyak
+
+        return response()->streamDownload(
+            fn() => print ($pdf->output()),
+            'laporan_pengaduan_' . now()->format('Ymd') . '.pdf'
+        );
     }
 }

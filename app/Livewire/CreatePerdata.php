@@ -6,25 +6,37 @@ use App\Models\Berkas;
 use App\Models\BerkasFile;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Auth;
+
 class CreatePerdata extends Component
 {
     use WithFileUploads;
 
-    // Tambahkan properti baru
-    // Properti Form
-    public $no_perkara, $tgl_register, $penggugat, $tergugat, $jenis_perkara, $pasal, $isi_gugatan;
+    // Properti Form sesuai Revisi SIPAKUM Part II
+    public $no_perkara;
+    public $tgl_register;
+    public $penggugat_pemohon; // Perubahan label dari 'penggugat'
+    public $tergugat;
+    public $jenis_perkara;
+    public $isi_gugatan; // Digunakan sebagai Isi Putusan
+    public $tgl_putusan; // Kolom Baru
+    public $tgl_penyerahan_berkas; // Kolom Baru
 
     // Properti Upload Dinamis
     public $files = [];
     public $fileInputs = [0];
 
-    // Fungsi untuk menambah baris input
+    public function mount()
+    {
+        $this->jenis_perkara = 'Gugatan';
+        $this->tgl_register = now()->format('Y-m-d');
+    }
+
     public function addFileInput()
     {
         $this->fileInputs[] = count($this->fileInputs);
     }
 
-    // Fungsi untuk menghapus baris input
     public function removeFileInput($index)
     {
         if (count($this->fileInputs) > 1) {
@@ -40,41 +52,49 @@ class CreatePerdata extends Component
         'files.*.max' => 'Ukuran file tidak boleh lebih dari 10 MB.',
     ];
 
-    public function mount()
-    {
-        $this->jenis_perkara = 'Gugatan'; // Default agar tidak NULL saat form dimuat
-    }
-
     public function store()
     {
-        //dd($this->jenis_perkara);
         $this->validate([
-            'no_perkara' => 'required',
-            'penggugat' => 'required',
-            'tergugat' => 'required',
+            'no_perkara' => 'required|string',
+            'tgl_register' => 'required|date',
+            'penggugat_pemohon' => 'required|string',
+            'tergugat' => 'required|string',
+            'jenis_perkara' => 'required',
+            'tgl_putusan' => 'nullable|date',
+            'tgl_penyerahan_berkas' => 'nullable|date',
+            'isi_gugatan' => 'required|string',
             'files' => 'required|array|min:1',
             'files.*' => 'file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
+        // Proteksi Logic: Pastikan hanya Admin/Superadmin yang bisa mengeksekusi
+        if (!Auth::user() || !in_array(Auth::user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk menambah data.');
+        }
+
+        // Simpan ke Tabel Berkas (Gunakan JSON untuk Metadata)
         $berkas = Berkas::create([
             'modul' => 'perdata',
             'nomor_registrasi' => $this->no_perkara,
-            'subjek' => "{$this->penggugat} vs {$this->tergugat}",
+            'subjek' => "{$this->penggugat_pemohon} vs {$this->tergugat}",
             'tanggal_kejadian' => $this->tgl_register,
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(), // FK ke tabel users
+            'created_by' => Auth::id(), // Sesuai file migrasi berkas_table
             'metadata' => [
-                'penggugat' => $this->penggugat,
+                'penggugat_pemohon' => $this->penggugat_pemohon,
                 'tergugat' => $this->tergugat,
                 'jenis_perkara' => $this->jenis_perkara,
-                'pasal' => $this->pasal,
+                'tgl_putusan' => $this->tgl_putusan,
+                'tgl_penyerahan_berkas' => $this->tgl_penyerahan_berkas,
                 'isi_gugatan' => $this->isi_gugatan,
+                // 'pasal' dihapus sesuai instruksi revisi
             ],
         ]);
 
-        // Simpan file dinamis
+        // Simpan File ke berkas_files
         foreach ($this->files as $file) {
             if ($file) {
-                $path = $file->store('dokumen/perdata', 'public');
+                $path = $file->store('berkas/perdata', 'public');
                 $berkas->files()->create([
                     'file_name' => $file->getClientOriginalName(),
                     'file_path' => $path
@@ -82,7 +102,14 @@ class CreatePerdata extends Component
             }
         }
 
-        session()->flash('success', 'Data perkara perdata berhasil disimpan.');
+        // Trigger Notifikasi Modern
+        //$this->dispatch('notify', message: 'Register Perdata berhasil disimpan!');
+        $this->dispatch(
+            'notify',
+            variant: 'success',
+            heading: 'Berhasil',
+            message: 'Data perdata telah diperbarui di sistem.'
+        );
         return redirect()->route('perdata.index');
     }
 

@@ -12,6 +12,7 @@ class SuratKuasa extends Model
     protected $table = 'surat_kuasa';
 
     protected $fillable = [
+        'kategori_perkara',
         'berkas_id',
         'nomor_surat_kuasa',
         'tanggal_surat',
@@ -21,10 +22,14 @@ class SuratKuasa extends Model
         'file_path',
     ];
 
-    public function berkas(): BelongsTo
-    {
-        return $this->belongsTo(Berkas::class);
-    }
+    /**
+     * Relasi ke model Berkas.
+     * Setiap Surat Kuasa dimiliki oleh satu Berkas perkara.
+     */
+    // public function berkas(): BelongsTo
+    // {
+    //     return $this->belongsTo(Berkas::class);
+    // }
 
     /**
      * Casting tipe data kolom.
@@ -34,9 +39,6 @@ class SuratKuasa extends Model
         'tanggal_surat' => 'date',
     ];
 
-    /**
-     * Relasi ke model Berkas.
-     * Setiap Surat Kuasa dimiliki oleh satu Berkas perkara.
-     */
-    
+
+
 }

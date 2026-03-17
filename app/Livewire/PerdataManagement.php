@@ -57,12 +57,14 @@ class PerdataManagement extends Component
     public function exportPDF()
     {
         $query = Berkas::modul('perdata');
-        if ($this->startDate) $query->whereDate('created_at', '>=', $this->startDate);
-        if ($this->endDate) $query->whereDate('created_at', '<=', $this->endDate);
+        if ($this->startDate)
+            $query->whereDate('created_at', '>=', $this->startDate);
+        if ($this->endDate)
+            $query->whereDate('created_at', '<=', $this->endDate);
 
         $data = $query->get();
         $pdf = Pdf::loadView('pdf.perdata', ['data' => $data, 'start' => $this->startDate, 'end' => $this->endDate]);
-        return response()->streamDownload(fn() => print($pdf->output()), 'perdata_report - ' . now()->format('Y-m-d') . '.pdf');
+        return response()->streamDownload(fn() => print ($pdf->output()), 'perdata_report - ' . now()->format('Y-m-d') . '.pdf');
     }
 
     public function render()
@@ -79,11 +81,14 @@ class PerdataManagement extends Component
                     ->orWhere('metadata->penggugat', 'like', '%' . $this->search . '%');
             });
 
-        if ($this->filterJenis) $query->where('metadata->jenis_perkara', $this->filterJenis);
+        if ($this->filterJenis)
+            $query->where('metadata->jenis_perkara', $this->filterJenis);
 
         // Filter Tanggal
-        if ($this->startDate) $query->whereDate('created_at', '>=', $this->startDate);
-        if ($this->endDate) $query->whereDate('created_at', '<=', $this->endDate);
+        if ($this->startDate)
+            $query->whereDate('created_at', '>=', $this->startDate);
+        if ($this->endDate)
+            $query->whereDate('created_at', '<=', $this->endDate);
 
         // Menambahkan filter berdasarkan metadata JSON
         if (!empty($this->filterJenis)) {

@@ -10,12 +10,8 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('berkas_files', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('berkas_id')->constrained('berkas')->onDelete('cascade');
-            $table->string('file_name');
-            $table->string('file_path');
-            $table->timestamps();
+        Schema::table('waarmerking', function (Blueprint $table) {
+            $table->dropColumn(['jenis_dokumen', 'file_path']); // Menghapus kategori dan file
         });
     }
 
@@ -24,6 +20,9 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('berkas_files');
+        Schema::table('waarmerking', function (Blueprint $table) {
+            $table->string('jenis_dokumen')->nullable();
+            $table->string('file_path')->nullable();
+        });
     }
 };

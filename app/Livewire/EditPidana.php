@@ -12,21 +12,15 @@ class EditPidana extends Component
 {
     use WithFileUploads;
 
-    public $berkasId, $jenis, $no_perkara, $pihak, $pasal, $tgl_putus, $tgl_penyerahan;
-    public $files = [], $fileInputs = [0]; // Input dinamis untuk file baru
-    public $oldFiles = []; // Menyimpan daftar file lama
+    public $berkasId, $jenis, $no_perkara, $pihak, $pasal, $tgl_putus, $tgl_penyerahan, $isi_putusan;
+    public $files = [], $fileInputs = [0];
+    public $existingFiles = []; // Diseragamkan penamaannya agar sinkron dengan view
 
     protected $messages = [
         'files.*.mimes' => 'Format file harus berupa PDF, JPG, atau PNG.',
         'files.*.max' => 'Ukuran file tidak boleh lebih dari 10 MB.',
     ];
 
-    protected function rules()
-    {
-        return [
-            'files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240', // Maks 10MB
-        ];
-    }
     public function mount($id)
     {
         $berkas = Berkas::with('files')->findOrFail($id);
@@ -34,62 +28,64 @@ class EditPidana extends Component
         $this->no_perkara = $berkas->nomor_registrasi;
         $this->pihak = $berkas->subjek;
 
-        // Pastikan field di database Anda adalah 'tanggal_kejadian'
-        $this->tgl_putus = \Carbon\Carbon::parse($berkas->tanggal_kejadian)->format('Y-m-d');
+        // Memastikan format tanggal benar untuk input type="date"
+        $this->tgl_putus = $berkas->tanggal_kejadian ? $berkas->tanggal_kejadian->format('Y-m-d') : null;
 
-        // Jika data disimpan di metadata JSON
+        // Ambil data dari JSON Metadata
         $this->jenis = $berkas->metadata['jenis_perkara'] ?? '';
         $this->pasal = $berkas->metadata['pasal'] ?? '';
         $this->tgl_penyerahan = $berkas->metadata['tgl_penyerahan'] ?? '';
+        $this->isi_putusan = $berkas->metadata['isi_putusan'] ?? '';
 
-        $this->oldFiles = $berkas->files;
+        $this->existingFiles = $berkas->files;
     }
 
-    // Menambah input file baru
     public function addFileInput()
     {
         $this->fileInputs[] = count($this->fileInputs);
     }
 
-    // Menghapus input file baru
     public function removeFileInput($index)
     {
-        unset($this->fileInputs[$index]);
-        $this->fileInputs = array_values($this->fileInputs);
+        if (count($this->fileInputs) > 1) {
+            unset($this->fileInputs[$index]);
+            unset($this->files[$index]);
+            $this->fileInputs = array_values($this->fileInputs);
+            $this->files = array_values($this->files);
+        }
     }
 
-    // Menghapus file lama (dari database & disk)
-    public function deleteOldFile($fileId)
+    public function deleteFile($fileId)
     {
-        $berkas = Berkas::findOrFail($this->berkasId);
+        $file = BerkasFile::findOrFail($fileId);
 
-        // Cek apakah sisa file (lama + baru) > 1
-        if (($berkas->files()->count() + count(array_filter($this->files))) > 1) {
-            $file = BerkasFile::findOrFail($fileId);
+        // Hapus file fisik dari storage
+        if (Storage::disk('public')->exists($file->file_path)) {
             Storage::disk('public')->delete($file->file_path);
-            $file->delete();
-
-            // Refresh daftar file
-            $this->oldFiles = $berkas->fresh()->files;
-        } else {
-            session()->flash('error', 'Minimal harus ada 1 dokumen tersisa.');
         }
+
+        $file->delete();
+
+        // Refresh data file lama
+        $this->existingFiles = Berkas::find($this->berkasId)->files;
+
+        // Kirim notifikasi merah untuk penghapusan
+        $this->dispatch(
+            'notify',
+            variant: 'error',
+            heading: 'File Dihapus',
+            message: 'Dokumen berhasil dihapus dari server.'
+        );
     }
 
     public function update()
     {
         $this->validate([
-            'jenis' => 'required',
-            'no_perkara' => 'required|unique:berkas,nomor_registrasi,' . $this->berkasId,
+            'no_perkara' => 'required',
             'pihak' => 'required',
             'tgl_putus' => 'required|date',
-            'files' => count($this->oldFiles) > 0 ? 'nullable' : 'required',
-            'files.*' => 'file|mimes:pdf,jpg,jpeg,png|max:10240',
-        ], [
-            // Pesan error kustom
-            'files.required' => 'Karena belum ada dokumen, Anda wajib mengunggah minimal satu dokumen.',
-            'files.*.mimes' => 'Format file harus berupa PDF, JPG, atau PNG.',
-            'files.*.max' => 'Ukuran file tidak boleh lebih dari 10 MB.',
+            'isi_putusan' => 'required',
+            'files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
         $berkas = Berkas::findOrFail($this->berkasId);
@@ -101,21 +97,30 @@ class EditPidana extends Component
                 'jenis_perkara' => $this->jenis,
                 'pasal' => $this->pasal,
                 'tgl_penyerahan' => $this->tgl_penyerahan,
+                'isi_putusan' => $this->isi_putusan, // Update isi putusan ke JSON
             ],
         ]);
 
         // Upload file baru jika ada
-        if ($this->files) {
+        if (!empty($this->files)) {
             foreach ($this->files as $file) {
-                $path = $file->store('dokumen/pidana', 'public');
-                $berkas->files()->create([
-                    'file_name' => $file->getClientOriginalName(),
-                    'file_path' => $path
-                ]);
+                if ($file) {
+                    $path = $file->store('berkas/pidana', 'public');
+                    $berkas->files()->create([
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $path
+                    ]);
+                }
             }
         }
 
-        session()->flash('success', 'Data berhasil diperbarui.');
+        $this->dispatch(
+            'notify',
+            variant: 'success',
+            heading: 'Berhasil',
+            message: 'Data pidana telah diperbarui.'
+        );
+
         return redirect()->route('pidana.index');
     }
 

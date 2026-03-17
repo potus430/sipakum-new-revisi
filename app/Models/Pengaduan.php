@@ -13,13 +13,17 @@ class Pengaduan extends Model
 
     protected $fillable = [
         'judul',
-        'isi_pengaduan',
+        'pelapor',
+        'terlapor',
+        'jenis_pengaduan',
+        'sarana_pengaduan',
+        'isi_pengaduan', // Tetap dipertahankan sebagai detail pengaduan
+        'status_pengaduan',
+        'tindak_lanjut',
+        'keterangan',
         'anonim',
-        'status',
         'file_pendukung',
         'user_id',
-        'status_lama',
-        'status_baru',
     ];
 
     public function user()
@@ -27,7 +31,8 @@ class Pengaduan extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function logs() {
-    return $this->hasMany(PengaduanLog::class);
-}
+    public function logs()
+    {
+        return $this->hasMany(PengaduanLog::class);
+    }
 }

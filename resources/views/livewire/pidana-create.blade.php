@@ -24,7 +24,11 @@
             <flux:input wire:model="tgl_penyerahan" type="date" label="Tanggal Penyerahan Berkas" />
         </div>
 
-        <div class="space-y-4">
+        {{-- Tambahan Kolom Isi Putusan --}}
+        <flux:textarea wire:model="isi_putusan" label="Isi Putusan (Amar)" rows="5"
+            placeholder="Masukkan petikan putusan..." required />
+
+        <div class="space-y-4 border-t border-accent-100 pt-6">
             <flux:label>Dokumen Pendukung</flux:label>
 
             @foreach ($fileInputs as $index => $value)

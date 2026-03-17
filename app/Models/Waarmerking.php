@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Waarmerking extends Model
 {
-   use HasFactory;
+    use HasFactory;
 
     protected $table = 'waarmerking';
 
@@ -17,9 +17,9 @@ class Waarmerking extends Model
     protected $fillable = [
         'nomor_register',
         'nama_pemohon',
-        'jenis_dokumen',
+        //'jenis_dokumen',
         'tanggal_legalisasi',
-        'file_path',
+        //'file_path',
         'catatan',
         'user_id',
     ];
