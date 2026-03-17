@@ -30,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
             return $user->role === 'superadmin';
         });
 
-        view()->share('appName', \App\Models\Setting::get('app_name', config('app.name')));
+        //view()->share('appName', \App\Models\Setting::get('app_name', config('app.name')));
     }
 
     /**
