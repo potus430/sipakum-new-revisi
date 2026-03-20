@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use App\Traits\Loggable;
 
 class Setting extends Model
 {
+    use Loggable;
     protected $fillable = ['key', 'value'];
 
     /**

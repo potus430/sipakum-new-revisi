@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\ActivityLogManager;
 use App\Livewire\CreatePerdata;
 use App\Livewire\CreatePidana;
 use App\Livewire\EditPerdata;
@@ -21,7 +22,7 @@ Route::get('/register', function () {
     return view('pages::auth.register'); // Sesuaikan dengan lokasi view register Anda
 })->name('register');
 
-Route::middleware(['auth', 'verified','check.status'])->group(function () {
+Route::middleware(['auth', 'verified', 'check.status'])->group(function () {
     Route::get('/', Dashboard::class)->name('dashboard');
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
 
@@ -56,6 +57,10 @@ Route::middleware(['auth', 'verified','check.status'])->group(function () {
 
     //Route Pengaduan
     Route::get('/pengaduan', PengaduanManager::class)->name('pengaduan.index');
+
+    // Rute Log Aktivitas
+    Route::get('/system/logs', ActivityLogManager::class)
+        ->name('activity-logs');
 });
 
 require __DIR__ . '/settings.php';

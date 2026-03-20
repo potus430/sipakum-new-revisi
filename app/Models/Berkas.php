@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use App\Traits\HasAuditLog;
+use App\Traits\Loggable; // Panggil Trait yang sudah dibuat
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Berkas extends Model
 {
-    use SoftDeletes, HasAuditLog;
+    use SoftDeletes;
+    use Loggable;
     protected $fillable = [
         'modul',
         'nomor_registrasi',
@@ -44,7 +45,7 @@ class Berkas extends Model
     }
 
     public function suratKuasa()
-{
-    return $this->hasMany(SuratKuasa::class, 'berkas_id');
-}
+    {
+        return $this->hasMany(SuratKuasa::class, 'berkas_id');
+    }
 }

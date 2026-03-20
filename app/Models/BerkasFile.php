@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
+use App\Traits\Loggable;
 
 class BerkasFile extends Model
 {
+    use Loggable;
     /**
      * Kolom yang dapat diisi secara massal.
      *

@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use App\Traits\HasAuditLog; // Pastikan Trait ini sudah dibuat
+//use App\Traits\HasAuditLog; // Pastikan Trait ini sudah dibuat
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\Loggable;
 
 class BerkasPidana extends Model
 {
-    use HasFactory, HasAuditLog, SoftDeletes;
+    use HasFactory, Loggable, SoftDeletes;
 
     /**
      * Kolom yang dapat diisi secara massal.

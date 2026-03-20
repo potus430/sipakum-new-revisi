@@ -21,12 +21,18 @@
                 </flux:sidebar.item>
 
                 @if (auth()->user()->role === 'superadmin')
-            <flux:sidebar.item icon="users" :href="route('user.management')" :current="request()->routeIs('user.management')" wire:navigate>
-                {{ __('Manajemen User') }}
-            </flux:sidebar.item>
-        @endif
-            </flux:sidebar.group>
+                    <flux:sidebar.item icon="users" :href="route('user.management')"
+                        :current="request()->routeIs('user.management')" wire:navigate>
+                        {{ __('Manajemen User') }}
+                    </flux:sidebar.item>
 
+                    {{-- TAMBAHKAN MENU LOG AKTIVITAS DI SINI --}}
+                    <flux:sidebar.item class="text-rose-600 dark:text-rose-400" icon="clipboard-document-list"
+                        :href="route('activity-logs')" :current="request()->routeIs('activity-logs')" wire:navigate>
+                        {{ __('Log Aktivitas') }}
+                    </flux:sidebar.item>
+                @endif
+            </flux:sidebar.group>
 
             <flux:sidebar.group :heading="__('Pendaftaran')" class="grid">
                 <flux:sidebar.item icon="scale" :href="route('pidana.index')"
@@ -45,27 +51,27 @@
                 </flux:sidebar.item>
 
                 <flux:navlist.group heading="Dokumen Pendukung" class="mt-4">
-        {{-- Menu Baru: Surat Kuasa --}}
-        <flux:navlist.item href="{{ route('surat-kuasa.index') }}" icon="identification" wire:navigate>
-            Surat Kuasa
-        </flux:navlist.item>
+                    {{-- Menu Baru: Surat Kuasa --}}
+                    <flux:navlist.item href="{{ route('surat-kuasa.index') }}" icon="identification" wire:navigate>
+                        Surat Kuasa
+                    </flux:navlist.item>
 
-        {{-- Menu Baru: Waarmerking --}}
-    <flux:navlist.item href="{{ route('waarmerking.index') }}" icon="document-check" wire:navigate>
-        Waarmerking
-    </flux:navlist.item>
-    </flux:navlist.group>
+                    {{-- Menu Baru: Waarmerking --}}
+                    <flux:navlist.item href="{{ route('waarmerking.index') }}" icon="document-check" wire:navigate>
+                        Waarmerking
+                    </flux:navlist.item>
+                </flux:navlist.group>
 
-    <flux:navlist.group heading="Kepatuhan & Integrasi" class="mt-4">
-    <flux:navlist.item href="{{ route('gratifikasi.index') }}" icon="shield-check" wire:navigate>
-        Gratifikasi
-    </flux:navlist.item>
+                <flux:navlist.group heading="Kepatuhan & Integrasi" class="mt-4">
+                    <flux:navlist.item href="{{ route('gratifikasi.index') }}" icon="shield-check" wire:navigate>
+                        Gratifikasi
+                    </flux:navlist.item>
 
-    <flux:navlist.item href="{{ route('pengaduan.index') }}" icon="megaphone" wire:navigate>
-        Pengaduan
-    </flux:navlist.item>
-</flux:navlist.group>
-                
+                    <flux:navlist.item href="{{ route('pengaduan.index') }}" icon="megaphone" wire:navigate>
+                        Pengaduan
+                    </flux:navlist.item>
+                </flux:navlist.group>
+
 
                 {{-- Menu Perdata dan modul lain bisa ditambahkan di sini nanti --}}
             </flux:sidebar.group>
