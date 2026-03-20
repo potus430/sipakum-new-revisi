@@ -28,21 +28,43 @@
         <flux:textarea wire:model="isi_putusan" label="Isi Putusan (Amar)" rows="5"
             placeholder="Masukkan petikan putusan..." required />
 
+        {{-- Ganti bagian loop Dokumen Pendukung dengan kode ini --}}
         <div class="space-y-4 border-t border-accent-100 pt-6">
-            <flux:label>Dokumen Pendukung</flux:label>
+            <flux:label>Dokumen Pendukung (Hanya PDF)</flux:label>
 
             @foreach ($fileInputs as $index => $value)
-                <div class="flex gap-2 items-center">
-                    <input type="file" wire:model="files.{{ $index }}"
-                        class="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-100 hover:file:bg-zinc-200 cursor-pointer" />
+                <div
+                    class="space-y-2 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                    <div class="flex gap-2 items-center">
+                        <input type="file" wire:model="files.{{ $index }}" accept="application/pdf"
+                            class="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-100 hover:file:bg-zinc-200 cursor-pointer" />
 
-                    {{-- Tombol Hapus: Hanya muncul jika ada lebih dari 1 kolom --}}
-                    @if (count($fileInputs) > 1)
-                        <flux:button type="button" wire:click="removeFileInput({{ $index }})" variant="danger"
-                            icon="trash" size="sm" />
+                        @if (count($fileInputs) > 1)
+                            <flux:button type="button" wire:click="removeFileInput({{ $index }})"
+                                variant="danger" icon="trash" size="sm" />
+                        @endif
+                    </div>
+
+                    {{-- Fitur Preview PDF --}}
+                    @if (isset($files[$index]) && $files[$index] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile)
+                        <div class="mt-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <flux:text size="sm" class="font-medium">Preview Dokumen {{ $index + 1 }}:
+                                </flux:text>
+                                <flux:button size="xs" variant="subtle" icon="magnifying-glass-plus"
+                                    wire:click="$dispatch('open-modal', { name: 'preview-pdf-{{ $index }}' })">
+                                    Perbesar
+                                </flux:button>
+                            </div>
+
+                            <div class="w-full h-64 border border-zinc-300 rounded-lg overflow-hidden bg-white">
+                                <iframe src="{{ $files[$index]->temporaryUrl() }}#toolbar=0"
+                                    class="w-full h-full"></iframe>
+                            </div>
+                        </div>
                     @endif
-                    <flux:error name="files.*" />
-                    <flux:error name="files" />
+
+                    <flux:error name="files.{{ $index }}" />
                 </div>
             @endforeach
 

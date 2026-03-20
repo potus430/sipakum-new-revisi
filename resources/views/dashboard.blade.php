@@ -8,35 +8,37 @@
     </div>
 
     {{-- Statistik Utama Perkara --}}
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        {{-- Kartu Pidana --}}
         <flux:card class="border-l-4 border-l-red-500">
-            <flux:subheading>Total Perkara Pidana</flux:subheading>
+            <flux:subheading>Total Pidana</flux:subheading>
             <flux:heading size="xl" class="mt-1">{{ $totalPidana }}</flux:heading>
-            <flux:text size="sm" class="text-zinc-500 mt-2">Kasus tindak pidana aktif</flux:text>
         </flux:card>
 
+        {{-- Kartu Perdata --}}
         <flux:card class="border-l-4 border-l-blue-500">
-            <flux:subheading>Total Perkara Perdata</flux:subheading>
+            <flux:subheading>Total Perdata</flux:subheading>
             <flux:heading size="xl" class="mt-1">{{ $totalPerdata }}</flux:heading>
-            <flux:text size="sm" class="text-zinc-500 mt-2">Sengketa perdata terdaftar</flux:text>
         </flux:card>
 
+        {{-- REKAP SURAT KUASA (BARU) --}}
+        <flux:card class="border-l-4 border-l-amber-500">
+            <flux:subheading>Surat Kuasa</flux:subheading>
+            <flux:heading size="xl" class="mt-1">{{ $totalSuratKuasa }}</flux:heading>
+            <flux:text size="sm" class="text-zinc-500 mt-2">Total berkas kuasa</flux:text>
+        </flux:card>
+
+        {{-- REKAP WAARMERKING (BARU) --}}
         <flux:card class="border-l-4 border-l-emerald-500">
+            <flux:subheading>Waarmerking</flux:subheading>
+            <flux:heading size="xl" class="mt-1">{{ $totalWaarmerking }}</flux:heading>
+            <flux:text size="sm" class="text-zinc-500 mt-2">Dokumen terdaftar</flux:text>
+        </flux:card>
+
+        {{-- Kartu Dokumen --}}
+        <flux:card class="border-l-4 border-l-purple-500">
             <flux:subheading>Total Dokumen</flux:subheading>
             <flux:heading size="xl" class="mt-1">{{ $totalDokumen }}</flux:heading>
-            <flux:text size="sm" class="text-zinc-500 mt-2">Arsip digital tersimpan</flux:text>
-        </flux:card>
-
-        <flux:card class="border-l-4 border-l-amber-500">
-            <flux:subheading>Gratifikasi</flux:subheading>
-            <flux:heading size="xl" class="mt-1">{{ $stats['gratifikasi_total'] }}</flux:heading>
-            <flux:text size="sm" class="text-zinc-500 mt-2">Laporan gratifikasi</flux:text>
-        </flux:card>
-
-        <flux:card class="border-l-4 border-l-purple-500">
-            <flux:subheading>User Aktif</flux:subheading>
-            <flux:heading size="xl" class="mt-1">Admin</flux:heading>
-            <flux:text size="sm" class="text-zinc-500 mt-2">Role: Superuser</flux:text>
         </flux:card>
     </div>
 

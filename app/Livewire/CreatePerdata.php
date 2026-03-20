@@ -28,6 +28,9 @@ class CreatePerdata extends Component
 
     public function mount()
     {
+        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
         $this->jenis_perkara = 'Gugatan';
         $this->tgl_register = now()->format('Y-m-d');
     }
@@ -48,12 +51,16 @@ class CreatePerdata extends Component
     }
 
     protected $messages = [
-        'files.*.mimes' => 'Format file harus berupa PDF, JPG, atau PNG.',
+        'files.*.mimes' => 'Format file harus berupa PDF.',
         'files.*.max' => 'Ukuran file tidak boleh lebih dari 10 MB.',
     ];
 
     public function store()
     {
+        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403);
+        }
+
         $this->validate([
             'no_perkara' => 'required|string',
             'tgl_register' => 'required|date',
@@ -64,7 +71,7 @@ class CreatePerdata extends Component
             'tgl_penyerahan_berkas' => 'nullable|date',
             'isi_gugatan' => 'required|string',
             'files' => 'required|array|min:1',
-            'files.*' => 'file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'files.*' => 'file|mimes:pdf|max:10240',
         ]);
 
         // Proteksi Logic: Pastikan hanya Admin/Superadmin yang bisa mengeksekusi
@@ -115,6 +122,7 @@ class CreatePerdata extends Component
 
     public function render()
     {
+
         return view('livewire.perdata-create');
     }
 }

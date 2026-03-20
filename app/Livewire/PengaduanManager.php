@@ -46,6 +46,10 @@ class PengaduanManager extends Component
 
     public function save()
     {
+        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            $this->dispatch('notify', variant: 'error', message: 'Tindakan tidak diizinkan.');
+            return;
+        }
         $this->validate([
             'judul' => 'required|min:5',
             'pelapor' => 'required',
@@ -93,6 +97,10 @@ class PengaduanManager extends Component
 
     public function edit($id)
     {
+        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            $this->dispatch('notify', variant: 'error', message: 'Tindakan tidak diizinkan.');
+            return;
+        }
         $pengaduan = Pengaduan::findOrFail($id);
         $this->selectedId = $pengaduan->id;
         $this->judul = $pengaduan->judul;
@@ -107,6 +115,32 @@ class PengaduanManager extends Component
         $this->is_anonim = $pengaduan->anonim === 'Ya';
 
         $this->js('$flux.modal("modal-update-status").show()');
+    }
+
+    public function delete($id)
+    {
+        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            $this->dispatch('notify', variant: 'error', message: 'Tindakan tidak diizinkan.');
+            return;
+        }
+
+        try {
+            $pengaduan = Pengaduan::findOrFail($id);
+
+            // 1. Hapus file fisik dari storage jika ada agar tidak memenuhi server
+            if ($pengaduan->file_pendukung && Storage::disk('public')->exists($pengaduan->file_pendukung)) {
+                Storage::disk('public')->delete($pengaduan->file_pendukung);
+            }
+
+            // 2. Hapus data dari database
+            $pengaduan->delete();
+
+            // 3. Memberikan feedback ke user
+            session()->flash('success', 'Data pengaduan berhasil dihapus.');
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Gagal menghapus data: ' . $e->getMessage());
+        }
     }
 
     public function resetForm()
@@ -162,10 +196,15 @@ class PengaduanManager extends Component
     public function viewDetail($id)
     {
         // Mengambil data detail pengaduan berdasarkan ID
-        $this->selectedPengaduan = Pengaduan::with('user')->find($id);
+        $this->selectedPengaduan = Pengaduan::find($id);
 
         // Memicu modal detail untuk muncul di browser
         if ($this->selectedPengaduan) {
+            // Reset state status jika ingin sinkron dengan modal update status
+            $this->status = $this->selectedPengaduan->status;
+            $this->tindak_lanjut = $this->selectedPengaduan->tindak_lanjut;
+
+            // Membuka modal
             $this->js('$flux.modal("modal-detail-pengaduan").show()');
         }
     }

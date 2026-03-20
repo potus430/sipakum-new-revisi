@@ -22,6 +22,7 @@ class WaarmerkingManager extends Component
 
     public $selectedId;
     public $isEditing = false;
+    public $selectedRegister = null;
 
     public function updatingSearch()
     {
@@ -87,6 +88,10 @@ class WaarmerkingManager extends Component
 
     public function save()
     {
+        // Proteksi Logic: Pastikan hanya Admin/Superadmin yang bisa mengeksekusi
+        if (!auth()->user() || !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan tindakan ini.');
+        }
         $this->validate([
             'nomor_register' => 'required|unique:waarmerking,nomor_register,' . $this->selectedId,
             'nama_pemohon' => 'required',
@@ -110,6 +115,10 @@ class WaarmerkingManager extends Component
 
     public function edit($id)
     {
+        // Proteksi Logic: Pastikan hanya Admin/Superadmin yang bisa mengeksekusi
+        if (!auth()->user() || !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan tindakan ini.');
+        }
         $item = Waarmerking::findOrFail($id);
         $this->selectedId = $item->id;
         $this->nomor_register = $item->nomor_register;
@@ -119,8 +128,19 @@ class WaarmerkingManager extends Component
         $this->isEditing = true;
     }
 
+    public function showDetail($id)
+    {
+        $this->selectedRegister = Waarmerking::find($id);
+
+        // Memicu modal menggunakan nama modal yang didefinisikan di blade
+        $this->dispatch('modal-show', name: 'detail-waarmerking');
+    }
+
     public function delete($id)
     {
+        if (!auth()->user() || !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan tindakan ini.');
+        }
         Waarmerking::findOrFail($id)->delete();
         session()->flash('success', 'Data berhasil dihapus.');
     }

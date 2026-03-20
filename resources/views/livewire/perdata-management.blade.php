@@ -5,9 +5,12 @@
             <flux:subheading>Manajemen berkas dan dokumen perkara perdata terpadu.</flux:subheading>
         </div>
 
-        <flux:button href="{{ route('perdata.create') }}" variant="primary" icon="plus" wire:navigate>
-            Tambah Perkara
-        </flux:button>
+        {{-- Tombol Tambah Perkara di Header --}}
+        @if (auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin')
+            <flux:button href="{{ route('perdata.create') }}" variant="primary" icon="plus" wire:navigate>
+                Tambah Perkara
+            </flux:button>
+        @endif
     </div>
 
     <flux:separator variant="subtle" />
@@ -109,11 +112,18 @@
                             </flux:table.cell>
 
                             <flux:table.cell align="end">
-                                <flux:button href="{{ route('perdata.edit', $item->id) }}" variant="ghost"
-                                    icon="pencil-square" wire:navigate />
-                                <flux:button wire:click="delete({{ $item->id }})" variant="ghost" icon="trash"
-                                    class="text-red-600 hover:text-red-700"
-                                    wire:confirm="Apakah Anda yakin ingin menghapus perkara ini? Tindakan ini akan menghapus semua file terkait secara permanen." />
+                                {{-- Tombol Detail tetap bisa diakses semua user --}}
+                                <flux:button wire:click="showDetail({{ $item->id }})" variant="ghost"
+                                    icon="eye" />
+
+                                {{-- Sembunyikan Edit dan Delete dari User Biasa --}}
+                                @if (auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin')
+                                    <flux:button href="{{ route('perdata.edit', $item->id) }}" variant="ghost"
+                                        icon="pencil-square" wire:navigate />
+                                    <flux:button wire:click="delete({{ $item->id }})" variant="ghost"
+                                        icon="trash" class="text-red-600 hover:text-red-700"
+                                        wire:confirm="Apakah Anda yakin ingin menghapus perkara ini?" />
+                                @endif
                             </flux:table.cell>
                         </flux:table.row>
                     @empty
@@ -134,4 +144,79 @@
             </div>
         @endif
     </div>
+
+    <flux:modal name="modal-detail-perdata" class="md:w-[600px]">
+        @if ($selectedBerkas)
+            <div class="space-y-6">
+                <div>
+                    <flux:heading size="lg">Detail Perkara Perdata</flux:heading>
+                    <flux:subheading>{{ $selectedBerkas->nomor_registrasi }}</flux:subheading>
+                </div>
+
+                <flux:separator variant="subtle" />
+
+                <div class="grid grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>Pihak (Subjek)</flux:label>
+                        <flux:text class="font-medium text-zinc-900 dark:text-white">{{ $selectedBerkas->subjek }}
+                        </flux:text>
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Jenis Perkara</flux:label>
+                        <flux:badge size="sm" color="zinc" inset="top bottom">
+                            {{ $selectedBerkas->metadata['jenis_perkara'] ?? '-' }}
+                        </flux:badge>
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Tanggal Putusan</flux:label>
+                        <flux:text>
+                            {{ isset($selectedBerkas->metadata['tgl_putusan']) ? \Carbon\Carbon::parse($selectedBerkas->metadata['tgl_putusan'])->format('d M Y') : '-' }}
+                        </flux:text>
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Tanggal Penyerahan</flux:label>
+                        <flux:text>
+                            {{ isset($selectedBerkas->metadata['tgl_penyerahan_berkas']) ? \Carbon\Carbon::parse($selectedBerkas->metadata['tgl_penyerahan_berkas'])->format('d M Y') : '-' }}
+                        </flux:text>
+                    </flux:field>
+                </div>
+
+                <flux:field>
+                    <flux:label>Isi Gugatan / Putusan</flux:label>
+                    <div
+                        class="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm italic">
+                        {{ $selectedBerkas->metadata['isi_gugatan'] ?? 'Tidak ada keterangan tambahan.' }}
+                    </div>
+                </flux:field>
+
+                <div>
+                    <flux:label class="mb-2 block">Dokumen PDF Terlampir</flux:label>
+                    <div class="space-y-2">
+                        @forelse ($selectedBerkas->files as $file)
+                            <div
+                                class="flex items-center justify-between p-2 bg-zinc-100 dark:bg-zinc-900 rounded border border-dashed border-zinc-300 dark:border-zinc-700">
+                                <div class="flex items-center gap-2">
+                                    <flux:icon name="document-text" size="sm" class="text-zinc-400" />
+                                    <span class="text-xs truncate w-64">{{ $file->file_name }}</span>
+                                </div>
+                                <flux:button size="xs" variant="subtle" icon="arrow-down-tray"
+                                    wire:click="downloadFile({{ $file->id }})">Unduh</flux:button>
+                            </div>
+                        @empty
+                            <flux:text size="sm" class="text-zinc-400">Tidak ada file yang diunggah.</flux:text>
+                        @endforelse
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <flux:modal.close>
+                        <flux:button variant="primary">Tutup</flux:button>
+                    </flux:modal.close>
+                </div>
+            </div>
+        @endif
+    </flux:modal>
 </div>

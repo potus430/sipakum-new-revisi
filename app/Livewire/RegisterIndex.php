@@ -14,23 +14,52 @@ class RegisterIndex extends Component
     public $filterModul = '';
 
     // Reset halaman pencarian saat filter diubah
-    public function updatedSearch() { $this->resetPage(); }
-    public function updatedFilterModul() { $this->resetPage(); }
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+    public function updatedFilterModul()
+    {
+        $this->resetPage();
+    }
 
+    // public function render()
+    // {
+    //     $query = Berkas::query()
+    //         ->with('files') // Eager load file untuk efisiensi
+    //         ->when($this->filterModul, function($q) {
+    //             $q->where('modul', $this->filterModul);
+    //         })
+    //         ->when($this->search, function($q) {
+    //             $q->where(function($sub) {
+    //                 $sub->where('nomor_registrasi', 'like', '%' . $this->search . '%')
+    //                     // Mencari di dalam kolom JSON metadata
+    //                     ->orWhere('metadata->pihak', 'like', '%' . $this->search . '%')
+    //                     ->orWhere('metadata->penggugat', 'like', '%' . $this->search . '%')
+    //                     ->orWhere('metadata->tergugat', 'like', '%' . $this->search . '%');
+    //             });
+    //         });
+
+    //     return view('livewire.register-index', [
+    //         'registers' => $query->latest()->paginate(10),
+    //     ]);
+    // }
+
+    // RegisterIndex.php - Bagian Render
     public function render()
     {
         $query = Berkas::query()
-            ->with('files') // Eager load file untuk efisiensi
-            ->when($this->filterModul, function($q) {
+            ->with('files')
+            ->when($this->filterModul, function ($q) {
                 $q->where('modul', $this->filterModul);
             })
-            ->when($this->search, function($q) {
-                $q->where(function($sub) {
+            ->when($this->search, function ($q) {
+                $q->where(function ($sub) {
                     $sub->where('nomor_registrasi', 'like', '%' . $this->search . '%')
-                        // Mencari di dalam kolom JSON metadata
-                        ->orWhere('metadata->pihak', 'like', '%' . $this->search . '%')
-                        ->orWhere('metadata->penggugat', 'like', '%' . $this->search . '%')
-                        ->orWhere('metadata->tergugat', 'like', '%' . $this->search . '%');
+                        ->orWhere('subjek', 'like', '%' . $this->search . '%') // Mencari di "Penggugat vs Tergugat"
+                        ->orWhere('metadata->penggugat_pemohon', 'like', '%' . $this->search . '%')
+                        ->orWhere('metadata->tergugat', 'like', '%' . $this->search . '%')
+                        ->orWhere('metadata->pihak', 'like', '%' . $this->search . '%'); // Tetap untuk Pidana
                 });
             });
 

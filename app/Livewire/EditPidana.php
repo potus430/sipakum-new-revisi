@@ -6,6 +6,7 @@ use App\Models\Berkas;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\BerkasFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class EditPidana extends Component
@@ -17,12 +18,16 @@ class EditPidana extends Component
     public $existingFiles = []; // Diseragamkan penamaannya agar sinkron dengan view
 
     protected $messages = [
-        'files.*.mimes' => 'Format file harus berupa PDF, JPG, atau PNG.',
+        'files.*.mimes' => 'Format file harus berupa PDF.',
         'files.*.max' => 'Ukuran file tidak boleh lebih dari 10 MB.',
     ];
 
     public function mount($id)
     {
+        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403);
+        }
+
         $berkas = Berkas::with('files')->findOrFail($id);
         $this->berkasId = $berkas->id;
         $this->no_perkara = $berkas->nomor_registrasi;
@@ -57,6 +62,10 @@ class EditPidana extends Component
 
     public function deleteFile($fileId)
     {
+        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403);
+        }
+
         $file = BerkasFile::findOrFail($fileId);
 
         // Hapus file fisik dari storage
@@ -80,13 +89,22 @@ class EditPidana extends Component
 
     public function update()
     {
+        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403);
+        }
+
         $this->validate([
             'no_perkara' => 'required',
             'pihak' => 'required',
             'tgl_putus' => 'required|date',
             'isi_putusan' => 'required',
-            'files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'files.*' => 'nullable|file|mimes:pdf|max:10240',
         ]);
+        // Proteksi Logic: Pastikan hanya Admin/Superadmin yang bisa mengeksekusi
+        if (!Auth::user() || !in_array(Auth::user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk menambah data.');
+        }
+
 
         $berkas = Berkas::findOrFail($this->berkasId);
         $berkas->update([

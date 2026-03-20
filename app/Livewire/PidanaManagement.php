@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Modules\Exports\PidanaExport as ExportsPidanaExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 
 class PidanaManagement extends Component
 {
@@ -20,6 +21,7 @@ class PidanaManagement extends Component
     public $filterJenis = '';
     public $tglMulai = '';
     public $tglSelesai = '';
+    public $selectedBerkas;
 
     // Reset pagination saat filter berubah
     public function updated($property)
@@ -27,6 +29,15 @@ class PidanaManagement extends Component
         if (in_array($property, ['search', 'filterJenis', 'tglMulai', 'tglSelesai'])) {
             $this->resetPage();
         }
+    }
+
+    public function showDetail($id)
+    {
+        // Mengambil data berkas dengan relasi filenya
+        $this->selectedBerkas = Berkas::with('files')->findOrFail($id);
+
+        // Memicu modal Flux untuk muncul
+        $this->js('$flux.modal("modal-detail-pidana").show()');
     }
 
     /**
@@ -108,6 +119,11 @@ class PidanaManagement extends Component
 
     public function delete($id)
     {
+        // Proteksi Logic: Pastikan hanya Admin/Superadmin yang bisa mengeksekusi
+        if (!Auth::user() || !in_array(Auth::user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk menambah data.');
+        }
+
         $berkas = Berkas::with('files')->findOrFail($id);
 
         // 1. Hapus file fisik dari storage

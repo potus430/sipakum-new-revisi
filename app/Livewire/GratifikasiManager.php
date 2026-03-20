@@ -16,6 +16,7 @@ class GratifikasiManager extends Component
     public $pelapor, $pemberi, $bentuk_gratifikasi, $estimasi_nilai, $tanggal_penerimaan, $kronologi, $status = 'Pending';
     public $file_bukti;
     public $search = '', $selectedId, $isEditing = false;
+    public $selectedGratifikasi = null;
 
     protected $rules = [
         'pelapor' => 'required',
@@ -27,6 +28,10 @@ class GratifikasiManager extends Component
 
     public function save()
     {
+        if (!auth()->user() || !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan tindakan ini.');
+        }
+
         $this->validate();
 
         $path = null;
@@ -52,6 +57,9 @@ class GratifikasiManager extends Component
 
     public function edit($id)
     {
+        if (!auth()->user() || !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan tindakan ini.');
+        }
         $g = Gratifikasi::findOrFail($id);
         $this->selectedId = $g->id;
         $this->pelapor = $g->pelapor;
@@ -64,24 +72,35 @@ class GratifikasiManager extends Component
         $this->isEditing = true;
     }
 
+    public function showDetail($id)
+    {
+        $this->selectedGratifikasi = Gratifikasi::find($id);
+
+        // Memicu modal menggunakan nama modal yang didefinisikan di blade
+        $this->dispatch('modal-show', name: 'detail-gratifikasi');
+    }
+
     public function resetForm()
     {
         $this->reset(['pelapor', 'pemberi', 'bentuk_gratifikasi', 'estimasi_nilai', 'tanggal_penerimaan', 'kronologi', 'file_bukti', 'selectedId', 'isEditing']);
     }
 
     public function delete($id)
-{
-    $item = Gratifikasi::findOrFail($id);
+    {
+        if (!auth()->user() || !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan tindakan ini.');
+        }
+        $item = Gratifikasi::findOrFail($id);
 
-    // Hapus file fisik jika ada
-    if ($item->file_bukti) {
-        Storage::disk('public')->delete($item->file_bukti);
+        // Hapus file fisik jika ada
+        if ($item->file_bukti) {
+            Storage::disk('public')->delete($item->file_bukti);
+        }
+
+        $item->delete();
+
+        session()->flash('success', 'Data laporan gratifikasi berhasil dihapus.');
     }
-
-    $item->delete();
-
-    session()->flash('success', 'Data laporan gratifikasi berhasil dihapus.');
-}
 
     public function render()
     {

@@ -6,9 +6,11 @@
         </div>
 
 
-        <flux:button href="{{ route('pidana.create') }}" variant="primary" icon="plus" wire:navigate>
-            Tambah Berkas
-        </flux:button>
+        @if (auth()->user()->role === 'superadmin' || auth()->user()->role === 'admin')
+            <flux:button href="{{ route('pidana.create') }}" variant="primary" icon="plus" wire:navigate>
+                Tambah Berkas
+            </flux:button>
+        @endif
 
     </div>
 
@@ -64,6 +66,7 @@
                     <flux:table.column class="w-1/4">Pasal</flux:table.column>
                     <flux:table.column class="w-1/4">Terdakwa / Pihak</flux:table.column>
                     <flux:table.column>Tanggal Putus</flux:table.column>
+                    <flux:table.column>Tanggal Penyerahan</flux:table.column>
                     <flux:table.column>Dokumen</flux:table.column>
                     <flux:table.column align="end">Aksi</flux:table.column>
                 </flux:table.columns>
@@ -98,6 +101,16 @@
                             </flux:table.cell>
 
                             <flux:table.cell>
+                                @if (isset($item->metadata['tgl_penyerahan']) && $item->metadata['tgl_penyerahan'])
+                                    <flux:badge color="indigo" variant="subtle" size="sm">
+                                        {{ \Carbon\Carbon::parse($item->metadata['tgl_penyerahan'])->format('d/m/Y') }}
+                                    </flux:badge>
+                                @else
+                                    <span class="text-zinc-400 italic text-xs">Belum diinput</span>
+                                @endif
+                            </flux:table.cell>
+
+                            <flux:table.cell>
                                 @foreach ($item->files as $file)
                                     <div class="flex items-center gap-2 mb-1">
                                         {{-- Logika Penentuan Ikon --}}
@@ -112,11 +125,16 @@
                             </flux:table.cell>
 
                             <flux:table.cell align="end">
-                                <flux:button href="{{ route('pidana.edit', $item->id) }}" variant="ghost"
-                                    icon="pencil-square" wire:navigate />
+                                <flux:button wire:click="showDetail({{ $item->id }})" variant="ghost"
+                                    icon="eye" />
 
-                                <flux:button wire:click="delete({{ $item->id }})" variant="ghost" icon="trash"
-                                    wire:confirm="Apakah Anda yakin ingin menghapus perkara ini? Tindakan ini akan menghapus semua file terkait secara permanen." />
+                                {{-- Sembunyikan tombol Edit dan Delete dari User Biasa --}}
+                                @if (auth()->user()->role === 'admin' || auth()->user()->role === 'superadmin')
+                                    <flux:button href="{{ route('pidana.edit', $item->id) }}" variant="ghost"
+                                        icon="pencil-square" wire:navigate />
+                                    <flux:button wire:click="delete({{ $item->id }})" variant="ghost"
+                                        icon="trash" class="text-red-600" wire:confirm="Hapus berkas ini?" />
+                                @endif
                             </flux:table.cell>
                         </flux:table.row>
                     @empty
@@ -137,4 +155,87 @@
             </div>
         @endif
     </div>
+
+    <flux:modal name="modal-detail-pidana" class="md:w-[600px]">
+        @if ($selectedBerkas)
+            <div class="space-y-6">
+                <div>
+                    <flux:heading size="lg">Detail Perkara Pidana</flux:heading>
+                    <flux:subheading>{{ $selectedBerkas->nomor_registrasi }}</flux:subheading>
+                </div>
+
+                <flux:separator variant="subtle" />
+
+                <div class="grid grid-cols-2 gap-4">
+                    <flux:field>
+                        <flux:label>Terdakwa / Pihak</flux:label>
+                        <flux:text class="font-medium text-zinc-900 dark:text-white">{{ $selectedBerkas->subjek }}
+                        </flux:text>
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Tanggal Putusan</flux:label>
+                        <flux:text>
+                            {{ $selectedBerkas->tanggal_kejadian ? $selectedBerkas->tanggal_kejadian->format('d M Y') : '-' }}
+                        </flux:text>
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Tanggal Penyerahan</flux:label>
+                        <flux:text>
+                            {{ isset($selectedBerkas->metadata['tgl_penyerahan']) ? \Carbon\Carbon::parse($selectedBerkas->metadata['tgl_penyerahan'])->format('d M Y') : '-' }}
+                        </flux:text>
+                    </flux:field>
+
+                    <flux:field>
+                        <flux:label>Jenis Perkara</flux:label>
+                        <flux:badge size="sm" inset="top bottom">
+                            {{ $selectedBerkas->metadata['jenis_perkara'] ?? '-' }}</flux:badge>
+                    </flux:field>
+                </div>
+
+                <flux:field>
+                    <flux:label>Pasal yang Disangkakan</flux:label>
+                    <flux:text>{{ $selectedBerkas->metadata['pasal'] ?? '-' }}</flux:text>
+                </flux:field>
+
+                <flux:field>
+                    <flux:label>Isi Putusan / Keterangan</flux:label>
+                    <div
+                        class="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm italic">
+                        {{ $selectedBerkas->metadata['isi_putusan'] ?? 'Tidak ada keterangan tambahan.' }}
+                    </div>
+                </flux:field>
+
+                <div>
+                    <flux:label class="mb-2 block">Dokumen Terlampir</flux:label>
+                    <div class="space-y-2">
+                        @forelse ($selectedBerkas->files as $file)
+                            <div
+                                class="flex items-center justify-between p-2 bg-zinc-100 dark:bg-zinc-900 rounded border border-dashed border-zinc-300 dark:border-zinc-700">
+                                <span class="text-xs truncate">{{ $file->file_name }}</span>
+                                <flux:button size="xs" variant="subtle" icon="arrow-down-tray"
+                                    wire:click="downloadFile({{ $file->id }})">Unduh</flux:button>
+                            </div>
+                        @empty
+                            <flux:text size="sm" class="text-zinc-400">Tidak ada file yang diunggah.</flux:text>
+                        @endforelse
+                    </div>
+                </div>
+
+                {{-- <div class="flex justify-end">
+                    <flux:button wire:click="$flux.modal('modal-detail-pidana').close()" variant="primary">
+                        Tutup
+                    </flux:button>
+                </div> --}}
+
+                <div class="flex justify-end">
+                    {{-- Atribut dismiss akan otomatis menutup modal yang sedang terbuka --}}
+                    <flux:modal.close>
+                        <flux:button variant="primary">Tutup</flux:button>
+                    </flux:modal.close>
+                </div>
+            </div>
+        @endif
+    </flux:modal>
 </div>

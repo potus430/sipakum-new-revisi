@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Berkas;
 use App\Models\BerkasFile;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
@@ -27,6 +28,10 @@ class EditPerdata extends Component
 
     public function mount($id)
     {
+        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403);
+        }
+
         $this->berkas = Berkas::with('files')->findOrFail($id);
 
         $this->no_perkara = $this->berkas->nomor_registrasi;
@@ -66,12 +71,16 @@ class EditPerdata extends Component
 
     public function update()
     {
+        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403);
+        }
         $this->validate([
             'no_perkara' => 'required',
             'penggugat_pemohon' => 'required',
             'tergugat' => 'required',
             'files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
 
         $this->berkas->update([
             'nomor_registrasi' => $this->no_perkara,

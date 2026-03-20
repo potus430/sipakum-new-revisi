@@ -33,14 +33,16 @@
         <flux:textarea wire:model="isi_gugatan" label="Isi Putusan" placeholder="Masukkan ringkasan amar putusan..."
             rows="5" />
 
-        <div class="space-y-4">
-            <flux:label>Dokumen Pendukung</flux:label>
+        {{-- Bagian Dokumen Pendukung pada perdata-create.blade.php --}}
+        <div class="space-y-4 border-t border-accent-100 pt-6">
+            <flux:label>Dokumen Pendukung (Hanya PDF)</flux:label>
 
             @foreach ($fileInputs as $index => $value)
-                <div class="flex flex-col gap-2 p-4 border border-dashed border-accent-200 rounded-lg bg-accent-50/30">
+                <div
+                    class="space-y-2 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700">
                     <div class="flex gap-2 items-center">
-                        <input type="file" wire:model="files.{{ $index }}"
-                            class="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 cursor-pointer" />
+                        <input type="file" wire:model="files.{{ $index }}" accept="application/pdf"
+                            class="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-100 hover:file:bg-zinc-200 cursor-pointer" />
 
                         @if (count($fileInputs) > 1)
                             <flux:button type="button" wire:click="removeFileInput({{ $index }})"
@@ -48,25 +50,24 @@
                         @endif
                     </div>
 
-                    @if (isset($files[$index]))
-                        <div class="mt-2">
-                            @if (in_array($files[$index]->getClientOriginalExtension(), ['jpg', 'jpeg', 'png']))
-                                <img src="{{ $files[$index]->temporaryUrl() }}"
-                                    class="h-20 w-20 object-cover rounded border border-primary-200">
-                            @else
-                                <div class="flex items-center gap-2 text-xs text-accent-700">
-                                    <flux:icon name="document-text" size="sm" />
-                                    {{ $files[$index]->getClientOriginalName() }}
-                                </div>
-                            @endif
+                    {{-- Preview PDF Otomatis --}}
+                    @if (isset($files[$index]) && $files[$index] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile)
+                        <div class="mt-4">
+                            <flux:text size="sm" class="mb-2 font-medium">Preview Dokumen {{ $index + 1 }}:
+                            </flux:text>
+                            <div
+                                class="w-full h-64 border border-zinc-300 rounded-lg overflow-hidden bg-white shadow-inner">
+                                <iframe src="{{ $files[$index]->temporaryUrl() }}#toolbar=0"
+                                    class="w-full h-full"></iframe>
+                            </div>
                         </div>
                     @endif
+
                     <flux:error name="files.{{ $index }}" />
                 </div>
             @endforeach
 
-            <flux:button type="button" wire:click="addFileInput" variant="subtle" size="sm" icon="plus"
-                class="text-primary-600">
+            <flux:button type="button" wire:click="addFileInput" variant="subtle" size="sm" icon="plus">
                 Tambah Dokumen Lagi
             </flux:button>
         </div>

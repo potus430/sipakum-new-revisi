@@ -10,6 +10,8 @@ use Livewire\Component;
 use App\Exports\LaporanSIPAKUMExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\SuratKuasa;
+use App\Models\Waarmerking;
 
 class Dashboard extends Component
 {
@@ -32,6 +34,8 @@ class Dashboard extends Component
             'totalPidana' => Berkas::where('modul', 'pidana')->count(),
             'totalPerdata' => Berkas::where('modul', 'perdata')->count(),
             'totalDokumen' => BerkasFile::count(),
+            'totalSuratKuasa' => SuratKuasa::count(),
+            'totalWaarmerking' => Waarmerking::count(),
 
             // Statistik Modul Pengaduan (Detail untuk Ringkasan)
             'pengaduanStats' => [

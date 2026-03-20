@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\SuratKuasa;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
@@ -30,13 +31,17 @@ class SuratKuasaManager extends Component
 
     public function save()
     {
+        if (!auth()->user() || !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan tindakan ini.');
+        }
+
         $this->validate([
             'kategori_perkara' => 'required|in:Pidana,Perdata',
             'nomor_surat' => 'required|unique:surat_kuasa,nomor_surat_kuasa,' . $this->selectedId,
             'tanggal_surat' => 'required|date',
             'pemberi' => 'required',
             'penerima' => 'required',
-            'jenis' => 'required|in:Khusus,Substitusi,Umum',
+            'jenis' => 'required|in:Khusus,Substitusi,Insidentil',
             'file_kuasa' => $this->isEditing ? 'nullable|mimes:pdf|max:10240' : 'required|mimes:pdf|max:10240',
         ]);
 
@@ -67,6 +72,10 @@ class SuratKuasaManager extends Component
 
     public function edit($id)
     {
+        // Proteksi Logic: Pastikan hanya Admin/Superadmin yang bisa mengeksekusi
+        if (!Auth::user() || !in_array(Auth::user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk memodifikasi data.');
+        }
         $kuasa = SuratKuasa::findOrFail($id);
         $this->selectedId = $id;
         $this->kategori_perkara = $kuasa->kategori_perkara;
@@ -84,12 +93,34 @@ class SuratKuasaManager extends Component
 
     public function delete($id)
     {
-        $kuasa = SuratKuasa::findOrFail($id);
-        if ($kuasa->file_path)
-            Storage::disk('public')->delete($kuasa->file_path);
-        $kuasa->delete();
+        if (!auth()->user() || !in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk melakukan tindakan ini.');
+        }
+        try {
+            $suratKuasa = SuratKuasa::findOrFail($id);
 
-        $this->dispatch('notify', variant: 'error', message: 'Surat Kuasa berhasil dihapus.');
+            // Hapus file fisik dari storage jika ada
+            if ($suratKuasa->file_path) {
+                Storage::disk('public')->delete($suratKuasa->file_path);
+            }
+
+            // Hapus data dari database
+            $suratKuasa->delete();
+
+            $this->dispatch(
+                'notify',
+                variant: 'success',
+                heading: 'Berhasil',
+                message: 'Data surat kuasa berhasil dihapus.'
+            );
+        } catch (\Exception $e) {
+            $this->dispatch(
+                'notify',
+                variant: 'error',
+                heading: 'Gagal',
+                message: 'Data tidak ditemukan atau gagal dihapus.'
+            );
+        }
     }
 
     public function showDetail($id)

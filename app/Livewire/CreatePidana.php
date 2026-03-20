@@ -18,7 +18,7 @@ class CreatePidana extends Component
     public $fileInputs = [0];
 
     protected $messages = [
-        'files.*.mimes' => 'Format file harus berupa PDF, JPG, atau PNG.',
+        'files.*.mimes' => 'Format file harus berupa PDF.',
         'files.*.max' => 'Ukuran file tidak boleh lebih dari 10 MB.',
     ];
 
@@ -39,15 +39,22 @@ class CreatePidana extends Component
 
     public function store()
     {
+        // Proteksi Logic: Pastikan hanya Admin/Superadmin yang bisa mengeksekusi
+        if (!Auth::user() || !in_array(Auth::user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Anda tidak memiliki akses untuk menambah data.');
+        }
+
         $this->validate([
             'no_perkara' => 'required|string',
             'pihak' => 'required|string',
             'jenis' => 'required',
             'tgl_putus' => 'required|date',
+            'tgl_penyerahan' => 'nullable|date',
             'isi_putusan' => 'required|string', // Validasi baru
             'files' => 'required|array|min:1',
-            'files.*' => 'file|mimes:pdf,jpg,jpeg,png|max:10240',
+            'files.*' => 'file|mimes:pdf|max:10240',
         ]);
+
 
         try {
             $berkas = Berkas::create([
@@ -94,6 +101,27 @@ class CreatePidana extends Component
                 heading: 'Gagal',
                 message: 'Terjadi kesalahan saat menyimpan data.'
             );
+        }
+    }
+
+    public function getPreviewUrl($index)
+    {
+        if (!isset($this->files[$index]))
+            return null;
+
+        try {
+            // Hanya hasilkan URL jika file adalah PDF
+            return $this->files[$index]->temporaryUrl();
+        } catch (\Exception $e) {
+            // Jika temporaryUrl gagal (beberapa browser/setup), gunakan cara alternatif
+            return null;
+        }
+    }
+
+    public function mount()
+    {
+        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            abort(403, 'Akses ditolak.');
         }
     }
 

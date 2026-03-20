@@ -8,6 +8,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Berkas;
 use App\Models\BerkasFile;
 use App\Traits\HandlesFiles;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -23,10 +24,16 @@ class PerdataManagement extends Component
     public $filterJenis = '';
     public $startDate = '';
     public $endDate = '';
+    public $selectedBerkas;
 
     // Method untuk menghapus data perkara perdata
     public function delete($id)
     {
+        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+            $this->dispatch('notify', variant: 'error', message: 'Tindakan tidak diizinkan.');
+            return;
+        }
+
         $berkas = Berkas::findOrFail($id);
 
         // 1. Hapus file fisik dari storage
@@ -65,6 +72,15 @@ class PerdataManagement extends Component
         $data = $query->get();
         $pdf = Pdf::loadView('pdf.perdata', ['data' => $data, 'start' => $this->startDate, 'end' => $this->endDate]);
         return response()->streamDownload(fn() => print ($pdf->output()), 'perdata_report - ' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function showDetail($id)
+    {
+        // Mengambil data berkas beserta relasi filenya
+        $this->selectedBerkas = Berkas::with('files')->findOrFail($id);
+
+        // Memicu modal Flux untuk muncul
+        $this->js('$flux.modal("modal-detail-perdata").show()');
     }
 
     public function render()
