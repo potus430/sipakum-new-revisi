@@ -18,6 +18,7 @@ class Berkas extends Model
         'tanggal_kejadian',
         'metadata',
         'user_id', // Pastikan ini ada untuk relasi dengan User
+        'created_by',
     ];
     // Cast metadata agar mudah diakses sebagai array
     protected $casts = [

@@ -35,6 +35,7 @@
                     <flux:select.option value="PID.SUS">PID.SUS</flux:select.option>
                     <flux:select.option value="ANAK">ANAK</flux:select.option>
                     <flux:select.option value="PRAPERADILAN">PRAPERADILAN</flux:select.option>
+                    <flux:select.option value="PIDANA CEPAT">PIDANA CEPAT</flux:select.option>
                 </flux:select>
             </div>
 

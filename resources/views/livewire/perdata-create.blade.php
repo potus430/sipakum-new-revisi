@@ -37,37 +37,60 @@
         <div class="space-y-4 border-t border-accent-100 pt-6">
             <flux:label>Dokumen Pendukung (Hanya PDF)</flux:label>
 
-            @foreach ($fileInputs as $index => $value)
-                <div
-                    class="space-y-2 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700">
-                    <div class="flex gap-2 items-center">
-                        <input type="file" wire:model="files.{{ $index }}" accept="application/pdf"
-                            class="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-100 hover:file:bg-zinc-200 cursor-pointer" />
+            @foreach ($fileInputs as $index)
+                <div class="p-4 border rounded-xl bg-zinc-50 dark:bg-zinc-800/50" x-data="{
+                    previewUrl: null,
+                    generatePreview(event) {
+                        const file = event.target.files[0];
+                        if (file && file.type === 'application/pdf') {
+                            // Membuat URL lokal dari file yang dipilih di browser
+                            this.previewUrl = URL.createObjectURL(file);
+                        }
+                    }
+                }">
 
-                        @if (count($fileInputs) > 1)
-                            <flux:button type="button" wire:click="removeFileInput({{ $index }})"
-                                variant="danger" icon="trash" size="sm" />
-                        @endif
+                    <flux:label>Unggah Dokumen (PDF)</flux:label>
+                    {{-- Input File Native untuk menangkap event change --}}
+                    <input type="file" wire:model="files.{{ $index }}" @change="generatePreview"
+                        accept="application/pdf"
+                        class="block w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 mt-1 cursor-pointer" />
+
+                    {{-- Area Preview PDF --}}
+                    <div x-show="previewUrl" x-transition class="mt-4 border-t border-dashed border-zinc-200 pt-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <flux:icon name="eye" size="sm" class="text-indigo-600" />
+                            <flux:text size="sm" class="font-medium text-indigo-600">
+                                Preview Dokumen Perdata:
+                            </flux:text>
+                        </div>
+
+                        <div
+                            class="w-full h-[500px] border border-zinc-300 rounded-lg overflow-hidden bg-white shadow-inner">
+                            <template x-if="previewUrl">
+                                {{-- Menggunakan tag <embed> untuk merender Blob URL --}}
+                                <embed :src="previewUrl" type="application/pdf" class="w-full h-full" />
+                            </template>
+                        </div>
+
+                        <flux:button variant="ghost" size="xs" class="mt-2 text-red-500"
+                            @click="previewUrl = null; $wire.set('files.{{ $index }}', null)">
+                            Hapus Pilihan
+                        </flux:button>
                     </div>
 
-                    {{-- Preview PDF Otomatis --}}
-                    @if (isset($files[$index]) && $files[$index] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile)
-                        <div class="mt-4">
-                            <flux:text size="sm" class="mb-2 font-medium">Preview Dokumen {{ $index + 1 }}:
-                            </flux:text>
-                            <div
-                                class="w-full h-64 border border-zinc-300 rounded-lg overflow-hidden bg-white shadow-inner">
-                                <iframe src="{{ $files[$index]->temporaryUrl() }}#toolbar=0"
-                                    class="w-full h-full"></iframe>
-                            </div>
-                        </div>
-                    @endif
-
                     <flux:error name="files.{{ $index }}" />
+
+                    @if (count($fileInputs) > 1)
+                        <flux:button variant="ghost" size="xs" color="red"
+                            wire:click="removeFileInput({{ $index }})" class="mt-2">
+                            Hapus Slot
+                        </flux:button>
+                    @endif
                 </div>
             @endforeach
 
-            <flux:button type="button" wire:click="addFileInput" variant="subtle" size="sm" icon="plus">
+            <flux:button type="button" wire:click="addFileInput" variant="subtle" size="sm" icon="plus"
+                class="text-indigo-600">
                 Tambah Dokumen Lagi
             </flux:button>
         </div>

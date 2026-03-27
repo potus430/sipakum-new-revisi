@@ -59,14 +59,37 @@ class EditPerdata extends Component
         unset($this->files[$index]);
     }
 
+    // public function deleteFile($fileId)
+    // {
+    //     $file = BerkasFile::findOrFail($fileId);
+    //     Storage::disk('public')->delete($file->file_path);
+    //     $file->delete();
+
+    //     $this->existingFiles = $this->berkas->fresh()->files;
+    //     $this->dispatch('notify', message: 'File berhasil dihapus.');
+    // }
+
     public function deleteFile($fileId)
     {
         $file = BerkasFile::findOrFail($fileId);
-        Storage::disk('public')->delete($file->file_path);
+
+        // Hapus file fisik dari storage
+        if (Storage::disk('public')->exists($file->file_path)) {
+            Storage::disk('public')->delete($file->file_path);
+        }
+
+        // Hapus record dari database
         $file->delete();
 
-        $this->existingFiles = $this->berkas->fresh()->files;
-        $this->dispatch('notify', message: 'File berhasil dihapus.');
+        // Refresh daftar file yang tersisa
+        $this->existingFiles = $this->berkas->files()->get();
+
+        $this->dispatch(
+            'notify',
+            variant: 'success',
+            heading: 'Dihapus',
+            message: 'Dokumen berhasil dihapus dari server.'
+        );
     }
 
     public function update()

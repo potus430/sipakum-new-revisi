@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Berkas;
+use App\Models\BerkasFile;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
@@ -104,19 +105,32 @@ class CreatePidana extends Component
         }
     }
 
-    public function getPreviewUrl($index)
-    {
-        if (!isset($this->files[$index]))
-            return null;
+    // public function getPreviewUrl($index)
+    // {
+    //     // Pastikan file ada dan merupakan objek UploadedFile
+    //     if (isset($this->files[$index]) && method_exists($this->files[$index], 'temporaryUrl')) {
+    //         try {
+    //             return $this->files[$index]->temporaryUrl();
+    //         } catch (\Exception $e) {
+    //             return null;
+    //         }
+    //     }
+    //     return null;
+    // }
 
-        try {
-            // Hanya hasilkan URL jika file adalah PDF
-            return $this->files[$index]->temporaryUrl();
-        } catch (\Exception $e) {
-            // Jika temporaryUrl gagal (beberapa browser/setup), gunakan cara alternatif
-            return null;
-        }
-    }
+    // public function getPreviewUrl($index)
+    // {
+    //     if (!isset($this->files[$index]))
+    //         return null;
+
+    //     try {
+    //         // Hanya hasilkan URL jika file adalah PDF
+    //         return $this->files[$index]->temporaryUrl();
+    //     } catch (\Exception $e) {
+    //         // Jika temporaryUrl gagal (beberapa browser/setup), gunakan cara alternatif
+    //         return null;
+    //     }
+    // }
 
     public function mount()
     {
